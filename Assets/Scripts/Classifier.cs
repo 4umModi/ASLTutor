@@ -6,12 +6,11 @@ using Leap.Unity;
 
 public class Classifier : MonoBehaviour
 {
-    //leap finger types
-    int TYPE_THUMB = 0;
-    int TYPE_INDEX = 1;
-    int TYPE_MIDDLE = 2;
-    int TYPE_RING = 3;
-    int TYPE_PINKY = 4;
+    //Bone Types
+    int TYPE_METACARPAL = 0;
+    int TYPE_PROXIMAL = 1;
+    int TYPE_INTERMEDIATE = 2;
+    int TYPE_DISTAL = 3;
 
     //creates controller variable
     Controller controller;
@@ -58,6 +57,13 @@ public class Classifier : MonoBehaviour
     
     }
 
+    //prints out featureID to unity console
+    void printFeatureID(List<int> featureIDs)
+    {
+        string featureIDString = string.Join(",", featureIDs);
+        Debug.Log(featureIDString);
+    }
+
     //Method to check for left hand.
     //if true returns factor of 1 to add to featureID list b/c all left hand features are even 
     int leftHandFactor(Hand hand)
@@ -82,10 +88,19 @@ public class Classifier : MonoBehaviour
 
     bool isBent(Finger finger)
     {
-        //find intermediate bone direction
-        //find procimal bone direction
-        //find angle between two directions
+        //find intermediate bone
+        Bone intermediateBone = finger.Bone((Bone.BoneType)(TYPE_PROXIMAL));
+        
+        //find proximal bone
+        Bone proximalBone = finger.Bone((Bone.BoneType)(TYPE_INTERMEDIATE));
+
+        //find angle between direction of both bones
+        float angle = (intermediateBone.Direction).AngleTo(proximalBone.Direction);
+
         //if above a threshold of .8 radians, then feature is present
+        if (angle >= .8) return true;
+
+        //if feature is not present return false
         return false;
     }
 
@@ -94,7 +109,7 @@ public class Classifier : MonoBehaviour
         List<int> featureIDList = new List<int>();
 
         //gets the value if lefthand (makes featureID even)
-        int leftHandFactor = leftHandFactor(hand);
+        int leftHandID = leftHandFactor(hand);
 
         //creates variable for featureID number
         int featureID = 0;
@@ -115,8 +130,8 @@ public class Classifier : MonoBehaviour
             if (finger.Type == Finger.FingerType.TYPE_THUMB) featureID = 19;
 
             //adds feature ID numbers for corresponding fingers based upon if they are bent or extended
-            if (finger.IsExtended) featureIDList.Add(featureID + leftHandFactor(hand));
-            if (isBent(finger)) featureIDList.Add(featureID + bentFeatureFactor + leftHandFactor(hand));
+            if (finger.IsExtended) featureIDList.Add(featureID + leftHandID);
+            if (isBent(finger)) featureIDList.Add(featureID + bentFeatureFactor + leftHandID);
 
         }
 
@@ -214,7 +229,7 @@ public class Classifier : MonoBehaviour
 
         //this value will come from the selected sign
         //will be implemented later
-        bool isDynamic = false;
+        isDynamic = false;
 
         //gets frame from leap controller
         Frame frame = controller.Frame();
@@ -244,5 +259,7 @@ public class Classifier : MonoBehaviour
                 featureIDs = checkDynamicFeatureID(handFrames, handFrameCount);
             }
         }
+
+        printFeatureID(featureIDs);
     }
 }
