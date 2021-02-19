@@ -27,6 +27,12 @@ public class Classifier : MonoBehaviour
     //creates counter variable
     int handFrameCount;
 
+    //amount of frames skipped when filling hands list (for sake of storage)
+    int framesSkip;
+
+    //amount of frames checked in checkpause function
+    int pauseAmount;
+
     //creates max count variable (max array size)
     int maxFrameCount;
 
@@ -35,6 +41,9 @@ public class Classifier : MonoBehaviour
 
     //creates boolean variable for dynamic signs
     bool isDynamic;
+
+    //variable for number of hands
+    int numHands;
 
     // Start is called before the first frame update
     void Start()
@@ -56,10 +65,25 @@ public class Classifier : MonoBehaviour
         rightHandFrames = new List<Hand>();
         leftHandFrames = new List<Hand>();
 
+        //sets number of hands to 0 at start
+        numHands = 0;
+
+        //sets recording to false at start
         recording = false;
 
+        //sets isDynamic to false at start
         isDynamic = false;
-    
+
+        framesSkip = 5;
+
+        pauseAmount = 15;
+
+    }
+
+    public void startRecording()
+    {
+        recording = true;
+        Start();
     }
 
     //prints out featureID to unity console
@@ -74,21 +98,39 @@ public class Classifier : MonoBehaviour
     int leftHandFactor(Hand hand)
     {
         int leftHandID = 1;
-        if (hand.IsRight) leftHandID = 0;
+        if (hand.IsRight || numHands == 1) leftHandID = 0;
         return leftHandID;
     }
 
 
     //Method to check if hand is moving or paused
     //if hand is paused for 50 consecutive frames, then end the recording
-    bool checkPaused(List<Hand> rightHandFrames, List<Hand> leftHandFrames)
+    bool checkPaused(List<Hand> rightHandFrames, List<Hand> leftHandFrames, int handFrameCount)
     {
 
-        //code to check if hand is paused
-        //check if there was movement in the last 50 frames 
+        //creates featureID list
+        List<int> featureIDList = new List<int>();
 
-        //check if hand is paused
-        return true;
+        //checks if there is a lefthand, if there is finds featureID for left hand
+        bool leftHand = false;
+        if (leftHandFrames.Count == rightHandFrames.Count) leftHand = true;
+
+        //creates array of Hand list frames variable
+        List<Hand> pausedRightHandFrames = new List<Hand>();
+        List<Hand> pausedLeftHandFrames = new List<Hand>();
+
+
+        for (int i= (handFrameCount- pauseAmount) ; i < handFrameCount; i++)
+        {
+           pausedRightHandFrames.Add(rightHandFrames[i]);
+           if (leftHand) pausedLeftHandFrames.Add(leftHandFrames[i]);
+        }
+
+        featureIDList = checkDynamicFeatureID(pausedRightHandFrames, pausedLeftHandFrames, pauseAmount);
+
+        if (featureIDList.Count == 0) return true;
+
+        return false;
     }
 
     bool isBent(Finger finger)
@@ -107,6 +149,26 @@ public class Classifier : MonoBehaviour
 
         //if feature is not present return false
         return false;
+    }
+
+    //Method to organize hands 
+    //if there are two hands, puts right hand at index 0 and left hand at index 1
+    List<Hand> twoHandsStatic(List<Hand> hands)
+    {
+        if (hands.Count < 2) return hands;
+
+        Hand leftHand = new Hand();
+        Hand rightHand = new Hand();
+
+        if (hands[0].IsLeft)
+        {
+            leftHand = hands[0];
+            rightHand = hands[1];
+            hands[0] = rightHand;
+            hands[1] = leftHand;
+        }
+
+        return hands;
     }
 
     List<int> checkFingersStatic(Hand hand)
@@ -143,6 +205,117 @@ public class Classifier : MonoBehaviour
         return featureIDList;
     }
 
+    //Method for getting feature IDs for Dynamic Bone Features
+    //returns list of feature IDs
+    List<int> checkBoneDynamic(List<Hand> handFrames, int handFrameCount)
+    {
+        //creates featureID list
+        List<int> featureIDList = new List<int>();
+        
+        //gets lefthandID
+        int leftHandID = leftHandFactor(handFrames[0]);
+
+        //variables for previous balues
+        float yPinkyPrev = 0;
+        float yRingPrev = 0;
+        float yMiddlePrev = 0;
+        float yIndexPrev = 0;
+        float xIndexPrev = 0;
+        float yThumbPrev = 0;
+        float yPrev = 0;
+        float xPrev = 0;
+
+        //variables for displacement
+        float yPinkyDis = 0;
+        float yRingDis = 0;
+        float yMiddleDis = 0;
+        float yIndexDis = 0;
+        float xIndexDis = 0;
+        float yThumbDis = 0;
+
+        //loops through all hand frames
+        for (int i = 0; i < handFrameCount; i++)
+        {
+            //gets Hand object from current frame
+            Hand hand = handFrames[i];
+
+            //gets list of fingers from hand 
+            List<Finger> fingers = hand.Fingers;
+
+            //loops through each finger
+            foreach (Finger finger in fingers)
+            {
+                //gets the distal bone of finger
+                Bone bone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
+
+                //gets current y value of bone
+                float yCurr = bone.NextJoint[1];
+
+                //each if statements checks finger type, and then 
+                //finds displacement between the last two frames
+                //and adds to respective fingers displacement variable
+
+                if (finger.Type == Finger.FingerType.TYPE_PINKY)
+                {
+                    yPrev = yPinkyPrev;
+                    yPinkyPrev = yCurr;
+                    if (yPrev == 0) break;
+                    yPinkyDis += Math.Abs(yPrev - yCurr);
+                }
+
+                if (finger.Type == Finger.FingerType.TYPE_RING)
+                {
+                    yPrev = yRingPrev;
+                    yRingPrev = yCurr;
+                    if (yPrev == 0) break;
+                    yRingDis += Math.Abs(yPrev - yCurr);
+                }
+
+                if (finger.Type == Finger.FingerType.TYPE_MIDDLE)
+                {
+                    yPrev = yMiddlePrev;
+                    yMiddlePrev = yCurr;
+                    if (yPrev == 0) break;
+                    yMiddleDis += Math.Abs(yPrev - yCurr);
+                }
+
+                if (finger.Type == Finger.FingerType.TYPE_INDEX)
+                {
+                    float xCurr = bone.NextJoint[0];
+                    xPrev = xIndexPrev;
+                    xIndexPrev = xCurr;
+
+                    yPrev = yIndexPrev;
+                    yIndexPrev = yCurr;
+                    if (yPrev == 0) break;
+
+                    xIndexDis += Math.Abs(xPrev - xCurr);
+                    yIndexDis += Math.Abs(yPrev - yCurr);
+                }
+                if (finger.Type == Finger.FingerType.TYPE_THUMB)
+                {
+                    yPrev = yThumbPrev;
+                    yThumbPrev = yCurr;
+                    if (yPrev == 0) break;
+                    yThumbDis += Math.Abs(yPrev - yCurr);
+                }
+            }
+        }
+
+        //If the average displacement is above a threshold, add the feature ID of the finger's y or x displacement
+        //the left hand factor just checks if it is a left hand and adds 1 if that is the case
+        if (yPinkyDis / handFrameCount >= 0.4) featureIDList.Add(35 + leftHandID);
+        if (yRingDis / handFrameCount >= 0.5) featureIDList.Add(37 + leftHandID);
+        if (yMiddleDis / handFrameCount >= 0.5) featureIDList.Add(39 + leftHandID);
+        if (yIndexDis / handFrameCount >= 0.5) featureIDList.Add(41 + leftHandID);
+        if (yThumbDis / handFrameCount >= 0.5) featureIDList.Add(43 + leftHandID);
+        if (xIndexDis / handFrameCount >= 0.5) featureIDList.Add(45 + leftHandID);
+
+        //returns featureID list
+        return featureIDList;
+    }
+
+
 
     //method to check if the Palm is Facing the leap
     //returns present featureIDs
@@ -165,26 +338,63 @@ public class Classifier : MonoBehaviour
         return featureIDList;
     }
 
-
-    //Method to organize hands 
-    //if there are two hands, puts right hand at index 0 and left hand at index 1
-    List<Hand> twoHandsStatic(List<Hand> hands)
+    //Method that returns feature IDs related to dynamic palm features
+    List<int> checkPalmDynamic(List<Hand> handFrames, int handFrameCount)
     {
-        if (hands.Count < 2) return hands;
-        
-        Hand leftHand = new Hand();
-        Hand rightHand = new Hand();
+        //creates featureIDlist
+        List<int> featureIDList = new List<int>();
 
-        if (hands[0].IsLeft)
+        int leftHandID = leftHandFactor(handFrames[0]);
+
+        //initial x and z displacement values
+        float xDisplacement = 0;
+        float zDisplacement = 0;
+
+        //intial palm position values
+        float xPrev = (handFrames[0].PalmPosition)[0];
+        float zPrev = (handFrames[0].PalmPosition)[2];
+
+        //intializes x and y mean values
+        float xMean = 0;
+        float zMean = 0;
+
+        for (int i = 1; i < handFrameCount; i++)
         {
-            leftHand = hands[0];
-            rightHand = hands[1];
-            hands[0] = rightHand;
-            hands[1] = leftHand;
+            //gets Hand object from current frame
+            Hand hand = handFrames[i];
+
+            //gets vector of plam position
+            float xCurr = hand.PalmPosition[0];
+            float zCurr = hand.PalmPosition[2];
+
+            //gets X,Z coordinates and adds to total
+            xDisplacement += Math.Abs(xPrev - xCurr);
+            zDisplacement += Math.Abs(zPrev - zCurr);
+
+            //set current values to previous values
+            xPrev = xCurr;
+            zPrev = zCurr;
+
         }
 
-        return hands;
+        //finds avg displacement for each feature
+        xMean = xDisplacement / handFrameCount;
+        zMean = zDisplacement / handFrameCount;
+
+        //testing and debugging statements
+        //Debug.Log("X: "+ xMean);
+        //Debug.Log("Z: " + zMean);
+
+        //if the features are present than there was more than 2 avg movement in the frames
+        //if they are present, add them to the feature list and return it
+        if (xMean > 0.8) featureIDList.Add(31 + leftHandID);
+        if (zMean > 0.8) featureIDList.Add(33 + leftHandID);
+
+        return featureIDList;
+
     }
+
+
 
     //Checks for all static feature IDs
     //Returns list of feature IDs that classify the sign
@@ -216,167 +426,26 @@ public class Classifier : MonoBehaviour
         
     }
 
-    //Method that returns feature IDs related to dynamic palm features
-    List<int> checkPalmDynamic(List<Hand> handFrames, int handFrameCount)
-    {
-        Debug.Log("in Palm");
-        //creates featureIDlist
-        List<int> featureIDList = new List<int>();
-
-        //initial x and z displacement values
-        float xDisplacement = 0;
-        float zDisplacement = 0;
-
-        //intial palm position values
-        float xPrev = (handFrames[0].PalmPosition)[0];
-        float zPrev = (handFrames[0].PalmPosition)[2];
-
-        //intializes x and y mean values
-        float xMean = 0;
-        float zMean = 0;
-
-        for (int i=1; i<handFrameCount; i++)
-        {
-            //gets Hand object from current frame
-            Hand hand = handFrames[i];
-
-            //gets vector of plam position
-            float xCurr = hand.PalmPosition[0];
-            float zCurr = hand.PalmPosition[2];
-
-            //gets X,Z coordinates and adds to total
-            xDisplacement += Math.Abs(xPrev - xCurr);
-            zDisplacement += Math.Abs(zPrev - zCurr);
-
-            //set current values to previous values
-            xPrev = xCurr;
-            zPrev = zCurr;
-
-        }
-
-        //finds avg displacement for each feature
-        xMean = xDisplacement / handFrameCount;
-        zMean = zDisplacement / handFrameCount;
-
-        Debug.Log("X: "+ xMean);
-        Debug.Log("Z: " + zMean);
-
-        //if the features are present than there was more than 2 avg movement in the frames
-        //if they are present, add them to the feature list and return it
-        if (xMean > 0.8) featureIDList.Add(31 + leftHandFactor(handFrames[0]));
-        if (zMean > 0.8) featureIDList.Add(33 + leftHandFactor(handFrames[0]));
-
-        return featureIDList;
-
-    }
-
-    List <int> checkBoneDynamic(List<Hand> handFrames, int handFrameCount)
-    {
-        Debug.Log("in Bone");
-        List<int> featureIDList = new List<int>();
-
-        for (int i = 0; i < handFrameCount; i++)
-        {
-            //gets Hand object from current frame
-            Hand hand = handFrames[i];
-            List<Finger> fingers = hand.Fingers;
-
-            int featureID = 0;
-
-            float yPinkyPrev = 0;
-            float yRingPrev = 0;
-            float yMiddlePrev = 0;
-            float yIndexPrev = 0;
-            float xIndexPrev = 0;
-            float yThumbPrev = 0;
-
-            float yPrev = 0;
-            float xPrev = 0;
-
-            float yPinkyDis = 0;
-            float yRingDis = 0;
-            float yMiddleDis = 0;
-            float yIndexDis = 0;
-            float xIndexDis = 0;
-            float yThumbDis = 0;
-
-            foreach (Finger finger in fingers)
-            {
-                Bone bone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
-                float yCurr = bone.NextJoint[1];
-
-                if (finger.Type == Finger.FingerType.TYPE_PINKY)
-                {
-                    yPrev = yPinkyPrev;
-                    yPinkyPrev = yCurr;
-                    if (yPrev == 0) break;
-                    yPinkyDis += Math.Abs(yPrev - yCurr);
-                }
-
-                if (finger.Type == Finger.FingerType.TYPE_RING)
-                {
-                    yPrev = yRingPrev;
-                    yRingPrev = yCurr;
-                    if (yPrev == 0) break;
-                    yRingDis += Math.Abs(yPrev - yCurr);
-                }
-                
-                if (finger.Type == Finger.FingerType.TYPE_MIDDLE)
-                {
-                    yPrev = yMiddlePrev;
-                    yMiddlePrev = yCurr;
-                    if (yPrev == 0) break;
-                    yMiddleDis += Math.Abs(yPrev - yCurr);
-                }
-
-                if (finger.Type == Finger.FingerType.TYPE_INDEX)
-                {
-                    float xCurr = bone.NextJoint[0];
-                    xPrev = xIndexPrev;
-                    xIndexPrev = xCurr;
-
-                    yPrev = yIndexPrev;
-                    yIndexPrev = yCurr;
-                    if (yPrev == 0) break;
-
-                    xIndexDis += Math.Abs(xPrev - xCurr);
-                    yIndexDis += Math.Abs(yPrev - yCurr);
-                }
-                if (finger.Type == Finger.FingerType.TYPE_THUMB)
-                {
-                    yPrev = yThumbPrev;
-                    yThumbPrev = yCurr;
-                    if (yPrev == 0) break;
-                    yThumbDis += Math.Abs(yPrev - yCurr);
-                }
-            }
-
-            if (yPinkyDis/handFrameCount >= 0.2) featureIDList.Add(35 + leftHandFactor(handFrames[0]));
-            if (yRingDis / handFrameCount >= 0.2) featureIDList.Add(37 + leftHandFactor(handFrames[0]));
-            if (yMiddleDis / handFrameCount >= 0.2) featureIDList.Add(39 + leftHandFactor(handFrames[0]));
-            if (yIndexDis / handFrameCount >= 0.2) featureIDList.Add(41 + leftHandFactor(handFrames[0]));
-            if (yThumbDis / handFrameCount >= 0.2) featureIDList.Add(43 + leftHandFactor(handFrames[0]));
-            if (xIndexDis / handFrameCount >= 0.2) featureIDList.Add(45 + leftHandFactor(handFrames[0]));
-        }
-        return featureIDList;
-    }
-
+    //Checks for all dynamic feature IDs
+    //Returns list of feature IDs that classify the sign 
     List<int> checkDynamicFeatureID(List<Hand> rightHandFrames, List<Hand> leftHandFrames, int handFrameCount)
     {
-        Debug.Log("in here");
+        //creates feature ID list
         List<int> featureIDList = new List<int>();
 
+        //checks if there is a lefthand, if there is finds featureID for left hand
         bool leftHand = false;
         if (leftHandFrames.Count == rightHandFrames.Count) leftHand = true;
 
+        //calls method to get Dynamic Palm Feature IDs and adds to featureIDlist
         featureIDList.AddRange(checkPalmDynamic(rightHandFrames, handFrameCount));
-        printFeatureID(featureIDList);
-        
-        //if (leftHand) featureIDList.AddRange(checkPalmDynamic(leftHandFrames, handFrameCount));
+        if (leftHand) featureIDList.AddRange(checkPalmDynamic(leftHandFrames, handFrameCount));
 
-        //featureIDList.AddRange(checkBoneDynamic(rightHandFrames, handFrameCount));
-        //if (leftHand) featureIDList.AddRange(checkBoneDynamic(leftHandFrames, handFrameCount));
+        //calls method to get Dynamic finger/bone feature IDs and adds to featureID list
+        featureIDList.AddRange(checkBoneDynamic(rightHandFrames, handFrameCount));
+        if (leftHand) featureIDList.AddRange(checkBoneDynamic(leftHandFrames, handFrameCount));
 
+        //returns featureIDlist
         return featureIDList;
     }
 
@@ -385,9 +454,7 @@ public class Classifier : MonoBehaviour
     void Update()
     {
 
-        //this value will be true when recording button has been pressed (turns false when pressed again)\
-        //will be implemented later
-        recording = true;
+        //this value will be true when recording button has been pressed (turns false when finished)
         if (!recording) return;
 
         //this value will come from the selected sign
@@ -400,8 +467,11 @@ public class Classifier : MonoBehaviour
         //gets list of hands in frame
         List<Hand> hands = frame.Hands;
 
+        //gets number of hands
+        numHands = hands.Count;
+
         //if no hands, nothing to track
-        if (hands.Count == 0) return;
+        if (numHands == 0) return;
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame
@@ -415,19 +485,25 @@ public class Classifier : MonoBehaviour
             hands = twoHandsStatic(hands);
 
             //fills hand with frames
-            rightHandFrames.Add(hands[0]);
-            if (hands.Count == 2) leftHandFrames.Add(hands[1]);
-
-            //if there are enough frames and the hand is paused then find dynamic features
-            if (handFrameCount >= 200 && checkPaused(rightHandFrames, leftHandFrames)) 
+            if (handFrameCount % framesSkip == 0)
             {
-                dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount);
+                rightHandFrames.Add(hands[0]);
+                if (hands.Count == 2) leftHandFrames.Add(hands[1]);
             }
+            
+            //if there are enough frames and the hand is paused then find dynamic features
+            if (handFrameCount / framesSkip >= 200 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip)) 
+            {
+                dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
+                recording = false;
+            }
+            
         }
-        
+        Debug.Log(handFrameCount);
         //increments handFrameCount
         handFrameCount += 1;
 
-        //printFeatureID(dynamicFeatureIDs);
+        printFeatureID(staticFeatureIDs);
+        printFeatureID(dynamicFeatureIDs);
     }
 }
