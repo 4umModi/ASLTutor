@@ -98,17 +98,14 @@ public class Classifier : MonoBehaviour
     //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
     IEnumerator CountdownToSign()
     {
-
+        //toggles on countdown text
+        countDown.gameObject.SetActive(true);
 
         //changes size to 300
         countDown.GetComponent<Text>().fontSize = 45;
 
         //sets time to 6
         countdownTime = 6;
-
-        //toggles on countdown text
-        countDown.gameObject.SetActive(true);
-
 
         //counts down from 5 to 0
         while (countdownTime > 0)
