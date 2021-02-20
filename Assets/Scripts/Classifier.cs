@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Leap;
 using Leap.Unity;
+using UnityEngine.UI;
 
 public class Classifier : MonoBehaviour
 {
@@ -45,9 +46,20 @@ public class Classifier : MonoBehaviour
     //variable for number of hands
     int numHands;
 
+    //variables for countdown timer
+    GameObject countDown; 
+    int countdownTime;
+    bool disableCountdown = true;
+
     // Start is called before the first frame update
     void Start()
     {
+        //finds countdown game object
+        countDown = GameObject.Find("CountdownText");
+
+        //sets count down time to 6
+        countdownTime = 6;
+
         //creates controller for leap
         controller = new Controller();
 
@@ -74,15 +86,80 @@ public class Classifier : MonoBehaviour
         //sets isDynamic to false at start
         isDynamic = false;
 
+        //because the unity takes in so many frames, we skip a few for storage reasons
         framesSkip = 5;
 
+        //amount of frames we check to consecutively be paused
         pauseAmount = 15;
 
     }
 
+    //Coroutine for Countdown timer
+    //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
+    IEnumerator CountdownToSign()
+    {
+
+
+        //changes size to 300
+        countDown.GetComponent<Text>().fontSize = 45;
+
+        //sets time to 6
+        countdownTime = 6;
+
+        //toggles on countdown text
+        countDown.gameObject.SetActive(true);
+
+
+        //counts down from 5 to 0
+        while (countdownTime > 0)
+        {
+            if (countdownTime == 6)
+            {
+                countDown.GetComponent<Text>().text = "Please start with the beginning \n handshape after the countdown";
+                yield return new WaitForSeconds(2f);
+            }
+
+            else
+            {
+                countDown.GetComponent<Text>().fontSize = 300;
+                countDown.GetComponent<Text>().text = countdownTime.ToString();
+            }
+
+            yield return new WaitForSeconds(1f);
+
+            countdownTime = countdownTime - 1;
+
+            
+        }
+
+        //tells user to sign
+        countDown.GetComponent<Text>().text = "Sign!";
+
+        //waits another second
+        yield return new WaitForSeconds(1f);
+
+        //toggles off text
+        countDown.gameObject.SetActive(false);
+
+        //rungs start
+        Start();
+
+        //sets recording to true
+        recording = true;
+
+    }
+
+    //attached to start rec button
     public void startRecording()
     {
-        recording = true;
+        StartCoroutine(CountdownToSign());
+    }
+
+    //attached to end rec button
+    public void endRecording()
+    {
+        Debug.Log("Trying to end");
+        recording = false;
         Start();
     }
 
@@ -454,6 +531,13 @@ public class Classifier : MonoBehaviour
     void Update()
     {
 
+        //toggles off countdown timer game object initially (there is an error doing this in start)
+        if (disableCountdown)
+        {
+            disableCountdown = false;
+            countDown.gameObject.SetActive(false);
+        }
+
         //this value will be true when recording button has been pressed (turns false when finished)
         if (!recording) return;
 
@@ -492,7 +576,7 @@ public class Classifier : MonoBehaviour
             }
             
             //if there are enough frames and the hand is paused then find dynamic features
-            if (handFrameCount / framesSkip >= 200 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip)) 
+            if (handFrameCount / framesSkip >= 50 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip)) 
             {
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
                 recording = false;
