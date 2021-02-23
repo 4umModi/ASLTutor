@@ -51,53 +51,16 @@ public class Classifier : MonoBehaviour
     int countdownTime;
     bool disableCountdown = true;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        //finds countdown game object
-        countDown = GameObject.Find("CountdownText");
-
-        //sets count down time to 6
-        countdownTime = 6;
-
-        //creates controller for leap
-        controller = new Controller();
-
-        //creates new list for feature IDs
-        staticFeatureIDs = new List<int>();
-        dynamicFeatureIDs = new List<int>();
-
-        //sets count to 0 initially
-        handFrameCount = 0;
-
-        //sets max frame count to 1000
-        maxFrameCount = 2000;
-
-        //creates new array for hand lists of size maxFrameCount
-        rightHandFrames = new List<Hand>();
-        leftHandFrames = new List<Hand>();
-
-        //sets number of hands to 0 at start
-        numHands = 0;
-
-        //sets recording to false at start
-        recording = false;
-
-        //sets isDynamic to false at start
-        isDynamic = false;
-
-        //because the unity takes in so many frames, we skip a few for storage reasons
-        framesSkip = 5;
-
-        //amount of frames we check to consecutively be paused
-        pauseAmount = 15;
-
-    }
+    //object of other script
+    Feedback featureIDs;
 
     //Coroutine for Countdown timer
     //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
     IEnumerator CountdownToSign()
     {
+        //runs start
+        Start();
+
         //toggles on countdown text
         countDown.gameObject.SetActive(true);
 
@@ -138,30 +101,73 @@ public class Classifier : MonoBehaviour
         //toggles off text
         countDown.gameObject.SetActive(false);
 
-        //rungs start
-        Start();
-
         //sets recording to true
         recording = true;
+
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        //allows us to call other script
+        featureIDs = GameObject.FindGameObjectWithTag("TagA").GetComponent<Feedback>();
+
+        //finds countdown game object
+        if (disableCountdown) countDown = GameObject.Find("CountdownText");
+
+        //sets count down time to 6
+        countdownTime = 6;
+
+        //creates controller for leap
+        controller = new Controller();
+
+        //creates new list for feature IDs
+        staticFeatureIDs = new List<int>();
+        dynamicFeatureIDs = new List<int>();
+
+        //sets count to 0 initially
+        handFrameCount = 0;
+
+        //sets max frame count to 1000
+        maxFrameCount = 2000;
+
+        //creates new array for hand lists of size maxFrameCount
+        rightHandFrames = new List<Hand>();
+        leftHandFrames = new List<Hand>();
+
+        //sets number of hands to 0 at start
+        numHands = 0;
+
+        //sets recording to false at start
+        recording = false;
+
+        //sets isDynamic to false at start
+        isDynamic = false;
+
+        //because the unity takes in so many frames, we skip a few for storage reasons
+        framesSkip = 5;
+
+        //amount of frames we check to consecutively be paused
+        pauseAmount = 15;
 
     }
 
     //attached to start rec button
     public void startRecording()
     {
+        endRecording();
         StartCoroutine(CountdownToSign());
     }
 
     //attached to end rec button
     public void endRecording()
     {
-        Debug.Log("Trying to end");
         recording = false;
         Start();
     }
 
     //prints out featureID to unity console
-    void printFeatureID(List<int> featureIDs)
+    public void printFeatureID(List<int> featureIDs)
     {
         string featureIDString = string.Join(",", featureIDs);
         Debug.Log(featureIDString);
@@ -527,7 +533,6 @@ public class Classifier : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         //toggles off countdown timer game object initially (there is an error doing this in start)
         if (disableCountdown)
         {
@@ -540,7 +545,7 @@ public class Classifier : MonoBehaviour
 
         //this value will come from the selected sign
         //will be implemented later
-        isDynamic = true;
+        isDynamic = false;
 
         //gets frame from leap controller
         Frame frame = controller.Frame();
@@ -556,7 +561,11 @@ public class Classifier : MonoBehaviour
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame
-        if (recording && (!isDynamic || handFrameCount == 0)) staticFeatureIDs = checkStaticFeatureID(hands);
+        if (recording && (handFrameCount % 500 == 0) && (!isDynamic || handFrameCount == 0))
+        {
+            staticFeatureIDs = checkStaticFeatureID(hands);
+            if (!isDynamic) featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs);
+        }
 
         //dynamic signs will read in all frames until hand is paused
         else if (recording && isDynamic)
@@ -571,20 +580,17 @@ public class Classifier : MonoBehaviour
                 rightHandFrames.Add(hands[0]);
                 if (hands.Count == 2) leftHandFrames.Add(hands[1]);
             }
-            
+
             //if there are enough frames and the hand is paused then find dynamic features
-            if (handFrameCount / framesSkip >= 50 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip)) 
+            if (handFrameCount / framesSkip >= 50 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip))
             {
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
+                featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs);
                 recording = false;
             }
-            
-        }
-        Debug.Log(handFrameCount);
-        //increments handFrameCount
-        handFrameCount += 1;
 
-        printFeatureID(staticFeatureIDs);
-        printFeatureID(dynamicFeatureIDs);
+        }
+
+        handFrameCount += 1;
     }
 }
