@@ -6,6 +6,7 @@ TagManager:
   tags:
   - TagA
   - TabB
+  - CurrentSign
   layers:
   - Default
   - TransparentFX

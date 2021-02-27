@@ -2,19 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//This script will give feedback based upon the featureIDs expected and the ones present in the users recorded signing
 public class Feedback : MonoBehaviour
 { 
-    // Start is called before the first frame update
-    void Start()
-    {
-        int y = 0;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        int x = 1;
-    }
 
     //prints out featureID to unity console
     public void printFeatureID(List<int> featureIDs)
@@ -23,12 +13,16 @@ public class Feedback : MonoBehaviour
         Debug.Log(featureIDString);
     }
 
-    public void getFeatureIDs(List<int> staticFeatureIDs, List<int> dynamicFeatureIDs)
+    //gets the feature IDs and other information from classifier script
+    public void getFeatureIDs(List<int> staticFeatureIDs, List<int> dynamicFeatureIDs, string name, bool isDynamic, List<int> expectedFeatureIDs)
     {
         List<int> featureIDs = staticFeatureIDs;
         featureIDs.AddRange(dynamicFeatureIDs);
         Debug.Log("In Feedback:");
         printFeatureID(featureIDs);
+        Debug.Log("Expected");
+        printFeatureID(expectedFeatureIDs);
+
 
     }
 }

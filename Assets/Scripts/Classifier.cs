@@ -53,6 +53,17 @@ public class Classifier : MonoBehaviour
 
     //object of other script
     Feedback featureIDs;
+    CurrentSign currentSign;
+
+    //THRESHOLD VALUES
+
+    double bentAngle = 0.8;
+    double noticableXDisFinger = 0.5;
+    double noticableYDisFinger = 0.5;
+    double avgXPalmDis = 0.8;
+    double avgYPalmDis = 0.8;
+
+
 
     //Coroutine for Countdown timer
     //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
@@ -109,6 +120,9 @@ public class Classifier : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //allows us to call methods from the currentSign script
+        currentSign = GameObject.FindGameObjectWithTag("CurrentSign").GetComponent<CurrentSign>();
+
         //allows us to call other script
         featureIDs = GameObject.FindGameObjectWithTag("TagA").GetComponent<Feedback>();
 
@@ -165,6 +179,7 @@ public class Classifier : MonoBehaviour
         recording = false;
         Start();
     }
+
 
     //prints out featureID to unity console
     public void printFeatureID(List<int> featureIDs)
@@ -225,7 +240,7 @@ public class Classifier : MonoBehaviour
         float angle = (intermediateBone.Direction).AngleTo(proximalBone.Direction);
 
         //if above a threshold of .8 radians, then feature is present
-        if (angle >= .8) return true;
+        if (angle >= bentAngle) return true;
 
         //if feature is not present return false
         return false;
@@ -384,12 +399,12 @@ public class Classifier : MonoBehaviour
 
         //If the average displacement is above a threshold, add the feature ID of the finger's y or x displacement
         //the left hand factor just checks if it is a left hand and adds 1 if that is the case
-        if (yPinkyDis / handFrameCount >= 0.4) featureIDList.Add(35 + leftHandID);
-        if (yRingDis / handFrameCount >= 0.5) featureIDList.Add(37 + leftHandID);
-        if (yMiddleDis / handFrameCount >= 0.5) featureIDList.Add(39 + leftHandID);
-        if (yIndexDis / handFrameCount >= 0.5) featureIDList.Add(41 + leftHandID);
-        if (yThumbDis / handFrameCount >= 0.5) featureIDList.Add(43 + leftHandID);
-        if (xIndexDis / handFrameCount >= 0.5) featureIDList.Add(45 + leftHandID);
+        if (yPinkyDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(35 + leftHandID);
+        if (yRingDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(37 + leftHandID);
+        if (yMiddleDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(39 + leftHandID);
+        if (yIndexDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(41 + leftHandID);
+        if (yThumbDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(43 + leftHandID);
+        if (xIndexDis / handFrameCount >= noticableYDisFinger) featureIDList.Add(45 + leftHandID);
 
         //returns featureID list
         return featureIDList;
@@ -465,10 +480,10 @@ public class Classifier : MonoBehaviour
         //Debug.Log("X: "+ xMean);
         //Debug.Log("Z: " + zMean);
 
-        //if the features are present than there was more than 2 avg movement in the frames
+        //if the features are present than there was more than .8 avg movement in the frames
         //if they are present, add them to the feature list and return it
-        if (xMean > 0.8) featureIDList.Add(31 + leftHandID);
-        if (zMean > 0.8) featureIDList.Add(33 + leftHandID);
+        if (xMean > avgXPalmDis) featureIDList.Add(31 + leftHandID);
+        if (zMean > avgYPalmDis) featureIDList.Add(33 + leftHandID);
 
         return featureIDList;
 
@@ -543,9 +558,8 @@ public class Classifier : MonoBehaviour
         //this value will be true when recording button has been pressed (turns false when finished)
         if (!recording) return;
 
-        //this value will come from the selected sign
-        //will be implemented later
-        isDynamic = false;
+        //this value will come from the sign menu
+        isDynamic = currentSign.getIsDynamic();
 
         //gets frame from leap controller
         Frame frame = controller.Frame();
@@ -561,10 +575,13 @@ public class Classifier : MonoBehaviour
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame
-        if (recording && (handFrameCount % 500 == 0) && (!isDynamic || handFrameCount == 0))
+        if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
         {
+            //gets static features
             staticFeatureIDs = checkStaticFeatureID(hands);
-            if (!isDynamic) featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs);
+
+            //calls feedback script to give feedback
+            if (!isDynamic) featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
         }
 
         //dynamic signs will read in all frames until hand is paused
@@ -584,13 +601,17 @@ public class Classifier : MonoBehaviour
             //if there are enough frames and the hand is paused then find dynamic features
             if (handFrameCount / framesSkip >= 50 && checkPaused(rightHandFrames, leftHandFrames, handFrameCount / framesSkip))
             {
+                //gets dynamic features
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
-                featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs);
+
+                //calls feedback script to give feedback
+                featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
                 recording = false;
             }
 
         }
 
+        //increases frame count
         handFrameCount += 1;
     }
 }
