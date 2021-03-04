@@ -86,8 +86,9 @@ public class SignMenu : MonoBehaviour
     string getDynamic(string signString)
     {
         int firstSpaceIndex = signString.IndexOf(" ");
-        string signIsDynamic = signString.Substring(firstSpaceIndex + 1, firstSpaceIndex + 1);
-        return signIsDynamic;
+        char signIsDynamic = signString[firstSpaceIndex+1];
+        string signDynamic = signIsDynamic.ToString();
+        return signDynamic;
     }
 
     //gets features based on index of first space

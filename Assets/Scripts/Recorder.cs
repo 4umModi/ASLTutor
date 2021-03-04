@@ -5,9 +5,10 @@ using UnityEngine;
 using Leap;
 using Leap.Unity;
 using UnityEngine.UI;
+using System.IO;
 
-public class Classifier : MonoBehaviour
-{
+public class Recorder : MonoBehaviour
+{ 
     //Bone Types
     int TYPE_METACARPAL = 0;
     int TYPE_PROXIMAL = 1;
@@ -18,8 +19,8 @@ public class Classifier : MonoBehaviour
     Controller controller;
 
     //creates list of feature ID variable
-    List<int> staticFeatureIDs;
-    List<int> dynamicFeatureIDs;
+    public static List<int> staticFeatureIDs;
+    public static List<int> dynamicFeatureIDs;
 
     //creates array of Hand list frames variable
     List<Hand> rightHandFrames;
@@ -41,20 +42,20 @@ public class Classifier : MonoBehaviour
     bool recording;
 
     //creates boolean variable for dynamic signs
-    bool isDynamic;
+    static bool isDynamic = false;
+
+    public Toggle dynamicToggle;
 
     //variable for number of hands
     int numHands;
 
     //variables for countdown timer
     GameObject countDown;
-    GameObject title;
     int countdownTime;
     bool disableCountdown = true;
 
     //object of other script
-    Feedback featureIDs;
-    CurrentSign currentSign;
+    InputField iField; 
 
     //THRESHOLD VALUES
 
@@ -101,7 +102,7 @@ public class Classifier : MonoBehaviour
 
             countdownTime = countdownTime - 1;
 
-            
+
         }
 
         //tells user to sign
@@ -118,7 +119,7 @@ public class Classifier : MonoBehaviour
 
     }
 
-    //gives feedback when recording is finished (if sign is done correctly this will be written over)
+    //feedback for finished recording to user
     IEnumerator finishedRecordingFeedback()
     {
         //toggles on countdown text
@@ -134,24 +135,28 @@ public class Classifier : MonoBehaviour
         countDown.gameObject.SetActive(false);
     }
 
+    //feedback to user when sign has been added
+    IEnumerator finishedAddingSignFeedback(string name)
+    {
+        //toggles on countdown text
+        countDown.gameObject.SetActive(true);
+
+        //changes size to 300
+        countDown.GetComponent<Text>().fontSize = 45;
+
+        countDown.GetComponent<Text>().text = "Added the sign " + name;
+        yield return new WaitForSeconds(5f);
+
+        //toggles off text
+        countDown.gameObject.SetActive(false);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
-        //allows us to call methods from the currentSign script
-        currentSign = GameObject.FindGameObjectWithTag("CurrentSign").GetComponent<CurrentSign>();
-
-        
-
-        //allows us to call other script
-        featureIDs = GameObject.FindGameObjectWithTag("TagA").GetComponent<Feedback>();
 
         //finds countdown game object
-        if (disableCountdown)
-        {
-            createUI(currentSign.getName(), currentSign.getIsDynamic());
-            countDown = GameObject.Find("CountdownText");
-        }
+        if (disableCountdown) countDown = GameObject.Find("CountdownText");
 
         //sets count down time to 6
         countdownTime = 6;
@@ -190,16 +195,6 @@ public class Classifier : MonoBehaviour
 
     }
 
-    //creates UI that displays the sign name and whether it is static or not
-    public void createUI(string name, bool isDynamic)
-    {
-        title = GameObject.Find("StartText");
-        title.gameObject.SetActive(true);
-        if (isDynamic) title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name + " (dynamic sign)");
-        else title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name + " (static sign)");
-    }
-
-
     //attached to start rec button
     public void startRecording()
     {
@@ -216,10 +211,10 @@ public class Classifier : MonoBehaviour
 
 
     //prints out featureID to unity console
-    public void printFeatureID(List<int> featureIDs)
+    public string getFeatureID(List<int> featureIDs)
     {
-        string featureIDString = string.Join(",", featureIDs);
-        Debug.Log(featureIDString);
+        string featureIDString = string.Join(" ", featureIDs);
+        return featureIDString;
     }
 
     //Method to check for left hand.
@@ -249,10 +244,10 @@ public class Classifier : MonoBehaviour
         List<Hand> pausedLeftHandFrames = new List<Hand>();
 
 
-        for (int i= (handFrameCount- pauseAmount) ; i < handFrameCount; i++)
+        for (int i = (handFrameCount - pauseAmount); i < handFrameCount; i++)
         {
-           pausedRightHandFrames.Add(rightHandFrames[i]);
-           if (leftHand) pausedLeftHandFrames.Add(leftHandFrames[i]);
+            pausedRightHandFrames.Add(rightHandFrames[i]);
+            if (leftHand) pausedLeftHandFrames.Add(leftHandFrames[i]);
         }
 
         featureIDList = checkDynamicFeatureID(pausedRightHandFrames, pausedLeftHandFrames, pauseAmount);
@@ -266,7 +261,7 @@ public class Classifier : MonoBehaviour
     {
         //find intermediate bone
         Bone intermediateBone = finger.Bone((Bone.BoneType)(TYPE_PROXIMAL));
-        
+
         //find proximal bone
         Bone proximalBone = finger.Bone((Bone.BoneType)(TYPE_INTERMEDIATE));
 
@@ -340,7 +335,7 @@ public class Classifier : MonoBehaviour
     {
         //creates featureID list
         List<int> featureIDList = new List<int>();
-        
+
         //gets lefthandID
         int leftHandID = leftHandFactor(handFrames[0]);
 
@@ -450,7 +445,7 @@ public class Classifier : MonoBehaviour
     //returns present featureIDs
     List<int> checkPalmFacingLeapStatic(Hand hand)
     {
-        
+
         //create featureID list
         List<int> featureIDList = new List<int>();
 
@@ -539,7 +534,8 @@ public class Classifier : MonoBehaviour
         featureIDList.AddRange(checkFingersStatic(hands[0]));
 
         //finding feature IDs for left hand
-        if (handNum == 2) {
+        if (handNum == 2)
+        {
             //featureID for twohands being present
             featureIDList.Add(0);
 
@@ -549,10 +545,9 @@ public class Classifier : MonoBehaviour
             //adds finger feature IDs
             featureIDList.AddRange(checkFingersStatic(hands[1]));
         }
-
         //returns full list of featureIDs
         return featureIDList;
-        
+
     }
 
     //Checks for all dynamic feature IDs
@@ -578,28 +573,80 @@ public class Classifier : MonoBehaviour
         return featureIDList;
     }
 
+    //adds sign information to text file
+    public void addSign()
+    {
+        //if no static or dynamic features return
+        if (staticFeatureIDs.Count == 0 && dynamicFeatureIDs.Count == 0) return;
 
-    // Update is called once per frame
-    void Update()
+        //find value of dynamic toggle
+        Toggle d = dynamicToggle.GetComponent<Toggle>();
+        isDynamic = d.isOn;
+
+        //get the name of the string
+        string name;
+        iField = GameObject.Find("SignName").GetComponent<InputField>();
+        name = iField.text;
+
+        //if there is no string name, return
+        if (name.Length == 0) return;
+
+        //get featureList
+        List<int> featureList = new List<int>();
+
+        //add static features
+        featureList.AddRange(staticFeatureIDs);
+
+        //add dynamic features
+        if (isDynamic) featureList.AddRange(dynamicFeatureIDs);
+        string features = getFeatureID(featureList);
+
+        //create line for text file
+        string line;
+        if (isDynamic) line = name + " " + "1" + " " + features;
+        else line = name + " " + "0" + " " + features;
+
+        //if line is full of only dynamic feauters and spaces, return
+        if (line.Length < 4) return;
+
+        //write to file
+        string filePath = "Assets/Scripts/signs.txt";
+        StreamWriter writer = new StreamWriter(filePath, true);
+        writer.WriteLine(line);
+
+        //close file
+        writer.Close();
+
+        Debug.Log(line);
+        //inform user that the sign has been added
+        StartCoroutine((finishedAddingSignFeedback(name)));
+
+    }
+
+
+
+// Update is called once per frame
+    public void Update()
     {
         //toggles off countdown timer game object initially (there is an error doing this in start)
         if (disableCountdown)
         {
             disableCountdown = false;
             countDown.gameObject.SetActive(false);
+
         }
 
         //this value will be true when recording button has been pressed (turns false when finished)
         if (!recording) return;
-
-        //this value will come from the sign menu
-        isDynamic = currentSign.getIsDynamic();
 
         //gets frame from leap controller
         Frame frame = controller.Frame();
 
         //gets list of hands in frame
         List<Hand> hands = frame.Hands;
+
+        Toggle d = dynamicToggle.GetComponent<Toggle>();
+        isDynamic = d.isOn;
 
         //gets number of hands
         numHands = hands.Count;
@@ -609,25 +656,22 @@ public class Classifier : MonoBehaviour
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame
-        if (recording && ((isDynamic && handFrameCount == 0) || (!isDynamic && handFrameCount == 200)))
+        if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
         {
             //gets static features
             staticFeatureIDs = checkStaticFeatureID(hands);
-            if (isDynamic) Debug.Log("we gots the statics");
 
-            //calls feedback script to give feedback
             if (!isDynamic)
             {
                 StartCoroutine(finishedRecordingFeedback());
                 recording = false;
-                featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
             }
         }
 
         //dynamic signs will read in all frames until hand is paused
         else if (recording && isDynamic)
         {
-
+            
             //puts right hand at 0 index and left hand at 1 index
             hands = twoHandsStatic(hands);
 
@@ -644,15 +688,12 @@ public class Classifier : MonoBehaviour
                 //gets dynamic features
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
 
-                //calls feedback script to give feedback
                 StartCoroutine(finishedRecordingFeedback());
-                featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
                 recording = false;
             }
 
         }
-
-        //increases frame count
         handFrameCount += 1;
     }
 }
+

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.SceneManagement;
 
 //This script will hold the value of the current sign, between the SignMenu Scene and Tutoring Scene
 public class CurrentSign : MonoBehaviour
@@ -19,7 +20,21 @@ public class CurrentSign : MonoBehaviour
     //this makes it so that in a new scene, the object that holds this script will not be reloaded or destroyed. The same copy of the script will be used regardless of scene changes
     void Awake()
     {
-        DontDestroyOnLoad(this.gameObject);
+      DontDestroyOnLoad(this.gameObject);
+    }
+
+    //this update function destroys the current sign object if it is at the home screen (to prevent errors with 2 sign values held)
+    void Update()
+    {
+        Scene m_Scene;
+        string sceneName;
+        m_Scene = SceneManager.GetActiveScene();
+        sceneName = m_Scene.name;
+        if (sceneName.Equals("Main Menu"))
+        {
+            Destroy(this.gameObject);
+            return;
+        }
     }
 
     //values passed in from Sign Menu Selectiong
@@ -29,7 +44,7 @@ public class CurrentSign : MonoBehaviour
         currentSign.name = signName;
 
         //finds boolean value of dynamic string
-        if (dynamic.Equals("1")) currentSign.isDynamic = true;
+        if (dynamic.Equals("1 ") || dynamic.Equals("1") || dynamic.Equals(" 1 ") || dynamic.Equals(" 1")) currentSign.isDynamic = true;
         else currentSign.isDynamic = false;
 
         //creates new feature ID list

@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Instructions.unity
     guid: 1233c301930cf6d458eeb389a04e1ae0
+  - enabled: 1
+    path: Assets/Scenes/RecordSign.unity
+    guid: fb56e5e4143947b429461aee27c6463f
   m_configObjects: {}
