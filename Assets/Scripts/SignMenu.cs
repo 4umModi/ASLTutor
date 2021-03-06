@@ -28,12 +28,15 @@ public class SignMenu : MonoBehaviour
         public string signFeatureID;
     }
 
+    public GameObject buttonTemplate;
+
     //array of sign struct
-    [SerializeField] Sign[] allSigns;
+    [SerializeField] Sign[] allSigns = new Sign[1000];
 
     // Start is called before the first frame update
     void Start()
     {
+
         //calls method to read Textfile
         stringSignArray = readTextFile("Assets\\Scripts\\signs.txt");
 
@@ -49,10 +52,12 @@ public class SignMenu : MonoBehaviour
 
         for (int i = 0; i < num; i++)
         {
+            
             //breaks whenever reaches signNum
             if (i >= signNum) break;
             int j = i;
 
+            //Debug.Log(signNum);
             //instantiates button object based off template
             sign = Instantiate(buttonTemplate, transform);
 

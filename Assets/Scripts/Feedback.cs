@@ -9,10 +9,20 @@ public class Feedback : MonoBehaviour
 {
     //called countdown because it uses the coundown text to display
     public GameObject countDown;
+    
+    //Buttons for button handling
+    Button recButton;
+    Button feedbackButton;
+
+    //list of all feedback
+    public static List<string> allFeedback;
+    public static int count;
 
     //If there is no feedback, tell the user directly on the screen
     IEnumerator userFeedback(string feedback)
     {
+  
+        recButton.interactable = false;
         //toggles on countdown text
         countDown.gameObject.SetActive(true);
 
@@ -23,10 +33,20 @@ public class Feedback : MonoBehaviour
         countDown.GetComponent<Text>().text = feedback;
 
         //wait 5 seconds
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(2f);
 
         //toggles off text
         countDown.gameObject.SetActive(false);
+        recButton.interactable = true;
+        feedbackButton.interactable = true;
+    }
+
+    public void Start()
+    {
+        allFeedback = new List<string>();
+        count = 0;
+        recButton = GameObject.Find("StartRecButton").GetComponent<Button>();
+        feedbackButton = GameObject.Find("Feedback").GetComponent<Button>();
     }
 
     //prints out featureID to unity console
@@ -44,21 +64,21 @@ public class Feedback : MonoBehaviour
         List<int> extraFeatureIDs = new List<int>();
 
         featureIDs.AddRange(dynamicFeatureIDs);
-        Debug.Log("In Feedback:");
+        /*Debug.Log("In Feedback:");
         printFeatureID(featureIDs);
         Debug.Log("Expected");
-        printFeatureID(expectedFeatureIDs);
+        printFeatureID(expectedFeatureIDs);*/
 
         missingFeatureIDs = findMissing(featureIDs, expectedFeatureIDs);
         extraFeatureIDs = findExtra(featureIDs, expectedFeatureIDs);
 
-        printFeatureID(missingFeatureIDs);
-        printFeatureID(extraFeatureIDs);
+        /*printFeatureID(missingFeatureIDs);
+        printFeatureID(extraFeatureIDs);*/
 
         giveFeedback(missingFeatureIDs, extraFeatureIDs, isDynamic, expectedFeatureIDs.Contains(0));
     }
 
-    void giveFeedback(List<int> missing, List<int> extra, bool isDynamic, bool twoHands)
+    public void giveFeedback(List<int> missing, List<int> extra, bool isDynamic, bool twoHands)
     {
         //if there are no missing or extra features then the user has correctly done the sing
         if (missing.Count == 0 && extra.Count == 0)
@@ -108,6 +128,10 @@ public class Feedback : MonoBehaviour
         feedback[20] = ("Left Hand should Extend Thumb" + endOfFeedback);
         feedback[21] = (precedingFeedback  + "Hand should Bend Thumb" + endOfFeedback);
         feedback[22] = ("Left Hand should Bend Thumb" + endOfFeedback);
+        feedback[23] = (precedingFeedback + " Hand should have fingers facing up" + endOfFeedback);
+        feedback[24] = ("Left Hand should have fingers facing up" + endOfFeedback);
+        feedback[25] = (precedingFeedback + "Index and Middle Fingers should not be touching" + endOfFeedback);
+        feedback[26] = ("Left Index and Middle Fingers should not be touching" + endOfFeedback);
 
         //dynamic features
         feedback[31] = ("Are you moving your" + precedingFeedback + "palm correctly (left/right direction)?");
@@ -151,6 +175,10 @@ public class Feedback : MonoBehaviour
         feedbackExtra[20] = ("Left Hand should NOT Extend Thumb" + endOfFeedback);
         feedbackExtra[21] = (precedingFeedback + "Hand should NOT Bend Index Thumb" + endOfFeedback);
         feedbackExtra[22] = ("Left Hand should NOT Bend Index Thumb" + endOfFeedback);
+        feedbackExtra[23] = (precedingFeedback + " Hand should NOT have fingers facing up" + endOfFeedback);
+        feedbackExtra[24] = ("Left Hand should NOT have fingers facing up" + endOfFeedback);
+        feedbackExtra[25] = (precedingFeedback + " Index and Middle Fingers should be touching" + endOfFeedback);
+        feedbackExtra[26] = ("Left Index and Middle Fingers should be touching" + endOfFeedback);
 
         if (extra.Contains(0) || missing.Contains(0))
         {
@@ -165,7 +193,8 @@ public class Feedback : MonoBehaviour
         {
             for (int i = 0; i < missing.Count; i++)
             {
-                Debug.Log(feedback[(missing[i])]);
+                allFeedback.Add(feedback[(missing[i])]);
+                count = count + 1;
             }
         }
 
@@ -174,12 +203,23 @@ public class Feedback : MonoBehaviour
         {
             for (int i = 0; i < extra.Count; i++)
             {
-                if (i < 30) Debug.Log(feedbackExtra[(extra[i])]);
-                else Debug.Log(feedback[(extra[i])]);
+                if (i < 30) allFeedback.Add(feedbackExtra[(extra[i])]);
+                else allFeedback.Add(feedback[(extra[i])]);
+                count = count + 1;
             }
         }
+        StartCoroutine(userFeedback("Get your feedback"));
+    }
 
+    public void getFeedback()
+    {
+        //object of another script
+        generateFeedback sendFeedback;
 
+        //allows us to call other script, that will hold sign information
+        sendFeedback = GameObject.FindGameObjectWithTag("TabB").GetComponent<generateFeedback>();
+
+        sendFeedback.showFeedback(allFeedback);
     }
 
     //compares array to find features that are expected but not present

@@ -63,13 +63,18 @@ public class Classifier : MonoBehaviour
     double noticableYDisFinger = 0.5;
     double avgXPalmDis = 0.8;
     double avgYPalmDis = 0.8;
+    double angleThreshold = 0.1;
 
-
+    //varibale for buttons
+    //used to make the interactable or not
+    Button recButton;
+    Button feedbackButton;
 
     //Coroutine for Countdown timer
     //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
     IEnumerator CountdownToSign()
     {
+        recButton.interactable = false;
         //runs start
         Start();
 
@@ -118,30 +123,12 @@ public class Classifier : MonoBehaviour
 
     }
 
-    //gives feedback when recording is finished (if sign is done correctly this will be written over)
-    IEnumerator finishedRecordingFeedback()
-    {
-        //toggles on countdown text
-        countDown.gameObject.SetActive(true);
-
-        //changes size to 300
-        countDown.GetComponent<Text>().fontSize = 45;
-
-        countDown.GetComponent<Text>().text = "Finished recording!";
-        yield return new WaitForSeconds(5f);
-
-        //toggles off text
-        countDown.gameObject.SetActive(false);
-    }
-
     // Start is called before the first frame update
     void Start()
     {
         
         //allows us to call methods from the currentSign script
         currentSign = GameObject.FindGameObjectWithTag("CurrentSign").GetComponent<CurrentSign>();
-
-        
 
         //allows us to call other script
         featureIDs = GameObject.FindGameObjectWithTag("TagA").GetComponent<Feedback>();
@@ -151,6 +138,9 @@ public class Classifier : MonoBehaviour
         {
             createUI(currentSign.getName(), currentSign.getIsDynamic());
             countDown = GameObject.Find("CountdownText");
+            recButton = GameObject.Find("StartRecButton").GetComponent<Button>();
+            feedbackButton = GameObject.Find("Feedback").GetComponent<Button>();
+            feedbackButton.interactable = false;
         }
 
         //sets count down time to 6
@@ -315,14 +305,29 @@ public class Classifier : MonoBehaviour
 
         //iterates through list of fingers
         List<Finger> fingers = hand.Fingers;
+
+        //Vector for index/middle finger
+        Vector index = new Vector();
+        Vector middle = new Vector();
+
         foreach (Finger finger in fingers)
         {
 
             //assigns feature ID number based on finger
             if (finger.Type == Finger.FingerType.TYPE_PINKY) featureID = 3;
             if (finger.Type == Finger.FingerType.TYPE_RING) featureID = 7;
-            if (finger.Type == Finger.FingerType.TYPE_MIDDLE) featureID = 11;
-            if (finger.Type == Finger.FingerType.TYPE_INDEX) featureID = 15;
+            if (finger.Type == Finger.FingerType.TYPE_MIDDLE)
+            {
+                Bone bone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
+                middle = bone.NextJoint;
+                featureID = 11;
+            }
+            if (finger.Type == Finger.FingerType.TYPE_INDEX)
+            {
+                Bone bone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
+                index = bone.NextJoint;
+                featureID = 15;
+            }
             if (finger.Type == Finger.FingerType.TYPE_THUMB) featureID = 19;
 
             //adds feature ID numbers for corresponding fingers based upon if they are bent or extended
@@ -330,6 +335,10 @@ public class Classifier : MonoBehaviour
             if (isBent(finger)) featureIDList.Add(featureID + bentFeatureFactor + leftHandID);
 
         }
+
+        //finds angle between middle and index finger
+        //if greater than .1, then fingers are apart
+        if (middle.AngleTo(index) > angleThreshold) featureIDList.Add(25 + leftHandID);
 
         return featureIDList;
     }
@@ -460,8 +469,12 @@ public class Classifier : MonoBehaviour
         //find Y value of palm normal vector
         float palmNormalY = palmNormal[1];
 
+        //finds x value of palm normal vector (checks if fingers face up or down)
+        float palmNormalX = palmNormal[0];
+
         //if palm normal Y value is less than 0, the palm is facing the leap, add to featureID list
         if (palmNormalY < 0) featureIDList.Add(1 + leftHandFactor(hand));
+        if (palmNormalX < -0.03) featureIDList.Add(23 + leftHandFactor(hand));
 
         //return featureID list
         return featureIDList;
@@ -613,12 +626,10 @@ public class Classifier : MonoBehaviour
         {
             //gets static features
             staticFeatureIDs = checkStaticFeatureID(hands);
-            if (isDynamic) Debug.Log("we gots the statics");
 
             //calls feedback script to give feedback
             if (!isDynamic)
             {
-                StartCoroutine(finishedRecordingFeedback());
                 recording = false;
                 featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
             }
@@ -644,8 +655,9 @@ public class Classifier : MonoBehaviour
                 //gets dynamic features
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
 
+                Debug.Log("got dynamic features");
+
                 //calls feedback script to give feedback
-                StartCoroutine(finishedRecordingFeedback());
                 featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());
                 recording = false;
             }
