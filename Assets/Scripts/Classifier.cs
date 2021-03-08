@@ -474,7 +474,7 @@ public class Classifier : MonoBehaviour
 
         //if palm normal Y value is less than 0, the palm is facing the leap, add to featureID list
         if (palmNormalY < 0) featureIDList.Add(1 + leftHandFactor(hand));
-        if (palmNormalX < -0.03) featureIDList.Add(23 + leftHandFactor(hand));
+        if (palmNormalX < -0.3) featureIDList.Add(23 + leftHandFactor(hand));
 
         //return featureID list
         return featureIDList;

@@ -135,7 +135,7 @@ public class Recorder : MonoBehaviour
         countDown.GetComponent<Text>().fontSize = 45;
 
         countDown.GetComponent<Text>().text = "Finished recording!";
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(2f);
 
         //toggles off text
         countDown.gameObject.SetActive(false);
@@ -146,6 +146,8 @@ public class Recorder : MonoBehaviour
     //feedback to user when sign has been added
     IEnumerator finishedAddingSignFeedback(string name)
     {
+        addButton.interactable = false;
+        recButton.interactable = false;
         //toggles on countdown text
         countDown.gameObject.SetActive(true);
 
@@ -157,6 +159,8 @@ public class Recorder : MonoBehaviour
 
         //toggles off text
         countDown.gameObject.SetActive(false);
+        addButton.interactable = true;
+        recButton.interactable = true;
     }
 
     // Start is called before the first frame update
@@ -488,7 +492,7 @@ public class Recorder : MonoBehaviour
 
         //if palm normal Y value is less than 0, the palm is facing the leap, add to featureID list
         if (palmNormalY < 0) featureIDList.Add(1 + leftHandFactor(hand));
-        if (palmNormalX < -0.03) featureIDList.Add(23 + leftHandFactor(hand));
+        if (palmNormalX < -.3) featureIDList.Add(23 + leftHandFactor(hand));
 
         //return featureID list
         return featureIDList;
