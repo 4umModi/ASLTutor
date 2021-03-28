@@ -54,6 +54,7 @@ namespace Leap.Unity {
         int USER_BONE_INDEX = 17;
 
         RiggedFinger riggedFinger;
+        HandEnableDisable handToggle;
 
         public override ModelType HandModelType { get { return ModelType.Graphics; } }
         public override bool SupportsEditorPersistence() { return true; }
@@ -192,9 +193,6 @@ namespace Leap.Unity {
                     z_pos = float.Parse(coordinate);
                     Vector3 vec = new Vector3(x_pos, y_pos, z_pos);
                     jointPositions.Add(vec);
-                    Debug.Log(x_pos);
-                    Debug.Log(y_pos);
-                    Debug.Log(z_pos);
                 }
 
                 else if (i % 7 == 3) { x_rot = float.Parse(coordinate); }
@@ -205,10 +203,6 @@ namespace Leap.Unity {
                     w_rot = float.Parse(coordinate);
                     Quaternion qua = new Quaternion(x_rot, y_rot, z_rot, w_rot);
                     jointRotations.Add(qua);
-                    Debug.Log(x_rot);
-                    Debug.Log(y_rot);
-                    Debug.Log(z_rot);
-                    Debug.Log(w_rot);
                 }
             }
         }
@@ -239,6 +233,8 @@ namespace Leap.Unity {
         {
             getValues();
             UpdateHand();
+            calculateModelPalmFacing(palm, fingers[2].transform, fingers[1].transform);
+            calculateModelFingerPointing();
             updateDeformPositionsInFingers();
             updateScaleLastFingerBoneInFingers();
 
@@ -303,11 +299,12 @@ namespace Leap.Unity {
                         //allows us to call methods from the currentSign script
                         riggedFinger = fingers[i].GetComponent<RiggedFinger>();
 
-                        if (fingers[i].fingerType == Finger.FingerType.TYPE_INDEX) { riggedFinger.UpdateFingerAnimate(jointPositions[INDEX_PROX_INDEX], jointPositions[INDEX_INTER_INDEX], jointPositions[INDEX_DISTAL_INDEX], jointRotations[INDEX_PROX_INDEX], jointRotations[INDEX_INTER_INDEX], jointRotations[INDEX_DISTAL_INDEX]); }
-                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_MIDDLE) { riggedFinger.UpdateFingerAnimate(jointPositions[MIDDLE_PROX_INDEX], jointPositions[MIDDLE_INTER_INDEX], jointPositions[MIDDLE_DISTAL_INDEX], jointRotations[MIDDLE_PROX_INDEX], jointRotations[MIDDLE_INTER_INDEX], jointRotations[MIDDLE_DISTAL_INDEX]); }
-                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_PINKY) { riggedFinger.UpdateFingerAnimate(jointPositions[PINKY_PROX_INDEX], jointPositions[PINKY_INTER_INDEX], jointPositions[PINKY_DISTAL_INDEX], jointRotations[PINKY_PROX_INDEX], jointRotations[PINKY_INTER_INDEX], jointRotations[PINKY_DISTAL_INDEX]); }
-                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_RING) { riggedFinger.UpdateFingerAnimate(jointPositions[RING_PROX_INDEX], jointPositions[RING_INTER_INDEX], jointPositions[RING_DISTAL_INDEX], jointRotations[RING_PROX_INDEX], jointRotations[RING_INTER_INDEX], jointRotations[RING_DISTAL_INDEX]); }
-                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_THUMB) { riggedFinger.UpdateFingerAnimate(jointPositions[THUMB_PROX_INDEX], jointPositions[THUMB_INTER_INDEX], jointPositions[THUMB_DISTAL_INDEX], jointRotations[THUMB_PROX_INDEX], jointRotations[THUMB_INTER_INDEX], jointRotations[THUMB_DISTAL_INDEX]); }
+                        if (fingers[i].fingerType == Finger.FingerType.TYPE_INDEX) { riggedFinger.UpdateFingerAnimate(jointPositions[INDEX_PROX_INDEX], jointPositions[INDEX_INTER_INDEX], jointPositions[INDEX_DISTAL_INDEX], jointRotations[INDEX_PROX_INDEX], jointRotations[INDEX_INTER_INDEX], jointRotations[INDEX_DISTAL_INDEX], modelPalmFacing); }
+                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_MIDDLE) { riggedFinger.UpdateFingerAnimate(jointPositions[MIDDLE_PROX_INDEX], jointPositions[MIDDLE_INTER_INDEX], jointPositions[MIDDLE_DISTAL_INDEX], jointRotations[MIDDLE_PROX_INDEX], jointRotations[MIDDLE_INTER_INDEX], jointRotations[MIDDLE_DISTAL_INDEX], modelPalmFacing); }
+                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_PINKY) { riggedFinger.UpdateFingerAnimate(jointPositions[PINKY_PROX_INDEX], jointPositions[PINKY_INTER_INDEX], jointPositions[PINKY_DISTAL_INDEX], jointRotations[PINKY_PROX_INDEX], jointRotations[PINKY_INTER_INDEX], jointRotations[PINKY_DISTAL_INDEX], modelPalmFacing); }
+                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_RING) { riggedFinger.UpdateFingerAnimate(jointPositions[RING_PROX_INDEX], jointPositions[RING_INTER_INDEX], jointPositions[RING_DISTAL_INDEX], jointRotations[RING_PROX_INDEX], jointRotations[RING_INTER_INDEX], jointRotations[RING_DISTAL_INDEX], modelPalmFacing); }
+                        else if (fingers[i].fingerType == Finger.FingerType.TYPE_THUMB) { riggedFinger.UpdateFingerAnimate(jointPositions[THUMB_PROX_INDEX], jointPositions[THUMB_INTER_INDEX], jointPositions[THUMB_DISTAL_INDEX], jointRotations[THUMB_PROX_INDEX], jointRotations[THUMB_INTER_INDEX], jointRotations[THUMB_DISTAL_INDEX], modelPalmFacing); }
+                        riggedFinger.UpdateFinger();
                     }
                         
             
@@ -433,6 +430,19 @@ namespace Leap.Unity {
             Vector3 b = palm.transform.InverseTransformPoint(finger1.position);
             Vector3 c = palm.transform.InverseTransformPoint(finger2.position);
 
+            Scene m_Scene;
+            string sceneName;
+            m_Scene = SceneManager.GetActiveScene();
+            sceneName = m_Scene.name;
+
+            if (sceneName.Equals("Learn"))
+            {
+                Debug.Log("2");
+                a = palm.transform.InverseTransformPoint(jointPositions[PALM_INDEX]);
+                b = palm.transform.InverseTransformPoint(jointPositions[PINKY_DISTAL_INDEX]);
+                c = palm.transform.InverseTransformPoint(jointPositions[MIDDLE_DISTAL_INDEX]);
+            }
+
             Vector3 side1 = b - a;
             Vector3 side2 = c - a;
             Vector3 perpendicular;
@@ -449,6 +459,15 @@ namespace Leap.Unity {
         /**Find finger direction by finding distance vector from palm to middle finger */
         private Vector3 calculateModelFingerPointing() {
             Vector3 distance = palm.transform.InverseTransformPoint(fingers[2].transform.GetChild(0).transform.position) - palm.transform.InverseTransformPoint(palm.position);
+            Scene m_Scene;
+            string sceneName;
+            m_Scene = SceneManager.GetActiveScene();
+            sceneName = m_Scene.name;
+            if (sceneName.Equals("Learn"))
+            {
+                Debug.Log("3");
+                distance = palm.transform.InverseTransformPoint(jointPositions[PINKY_INTER_INDEX]) - transform.InverseTransformPoint(jointPositions[PALM_INDEX]);
+            }
             Vector3 calculatedFingerPointing = CalculateZeroedVector(distance);
             return calculatedFingerPointing * -1f;
         }

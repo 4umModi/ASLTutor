@@ -26,5 +26,9 @@ namespace Leap.Unity{
       gameObject.SetActive(false);
     }
 
+    public void HandActivate() {
+      gameObject.SetActive(true);
+    }
+
   }
 }

@@ -8,68 +8,76 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Leap;
+using Leap.Unity.Attributes;
+using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System;
+using System.IO;
 
 namespace Leap.Unity {
 
-  /// <summary>
-  /// Manages the position and orientation of the bones in a model rigged for skeletal
-  /// animation.
-  ///  
-  /// The class expects that the graphics model's bones that correspond to the bones in
-  /// the Leap Motion hand model are in the same order in the bones array.
-  /// </summary>
-  public class RiggedFinger : FingerModel {
-
     /// <summary>
-    /// Allows the mesh to be stretched to align with finger joint positions.
-    /// Only set to true when mesh is not visible.
+    /// Manages the position and orientation of the bones in a model rigged for skeletal
+    /// animation.
+    ///  
+    /// The class expects that the graphics model's bones that correspond to the bones in
+    /// the Leap Motion hand model are in the same order in the bones array.
     /// </summary>
-    [HideInInspector]
-    public bool deformPosition = false;
+    public class RiggedFinger : FingerModel {
 
-    [HideInInspector]
-    public bool scaleLastFingerBone = false;
+        /// <summary>
+        /// Allows the mesh to be stretched to align with finger joint positions.
+        /// Only set to true when mesh is not visible.
+        /// </summary>
+        [HideInInspector]
+        public bool deformPosition = false;
 
-    public Vector3 modelFingerPointing = Vector3.forward;
-    public Vector3 modelPalmFacing = -Vector3.up;
+        [HideInInspector]
+        public bool scaleLastFingerBone = false;
 
-    public bool animate = false;
+        public Vector3 modelFingerPointing = Vector3.forward;
+        public Vector3 modelPalmFacing = -Vector3.up;
 
-    public Vector3 prox_position = new Vector3(0,0,0); 
-    public Vector3 inter_position = new Vector3(0, 0, 0); 
-    public Vector3 distal_position = new Vector3(0, 0, 0);
-    public Quaternion prox_rotation = new Quaternion(0, 0, 0, 0);
-    public Quaternion inter_rotation = new Quaternion(0, 0, 0, 0);
-    public Quaternion distal_rotation = new Quaternion(0, 0, 0, 0);
+        public bool animate = false;
 
-    public Quaternion Reorientation() {
-      return Quaternion.Inverse(Quaternion.LookRotation(modelFingerPointing, -modelPalmFacing));
-    }
+        public Vector3 prox_position = new Vector3(0, 0, 0);
+        public Vector3 inter_position = new Vector3(0, 0, 0);
+        public Vector3 distal_position = new Vector3(0, 0, 0);
+        public Quaternion prox_rotation = new Quaternion(0, 0, 0, 0);
+        public Quaternion inter_rotation = new Quaternion(0, 0, 0, 0);
+        public Quaternion distal_rotation = new Quaternion(0, 0, 0, 0);
+
+        public Quaternion Reorientation() {
+            return Quaternion.Inverse(Quaternion.LookRotation(modelFingerPointing, -modelPalmFacing));
+        }
 
 
-    /// <summary>
-    /// Fingertip lengths for the standard edit-time hand.
-    /// </summary>
-    private static float[] s_standardFingertipLengths = null;
-    static RiggedFinger() {
-      // Calculate standard fingertip lengths.
-      s_standardFingertipLengths = new float[5];
-      var testHand = TestHandFactory.MakeTestHand(isLeft: true,
-                           unitType: TestHandFactory.UnitType.UnityUnits);
-      for (int i = 0; i < 5; i++) {
-        var fingertipBone = testHand.Fingers[i].bones[3];
-        s_standardFingertipLengths[i] = fingertipBone.Length;
-      }
-    }
+        /// <summary>
+        /// Fingertip lengths for the standard edit-time hand.
+        /// </summary>
+        private static float[] s_standardFingertipLengths = null;
+        static RiggedFinger() {
+            // Calculate standard fingertip lengths.
+            s_standardFingertipLengths = new float[5];
+            var testHand = TestHandFactory.MakeTestHand(isLeft: true,
+                                 unitType: TestHandFactory.UnitType.UnityUnits);
+            for (int i = 0; i < 5; i++) {
+                var fingertipBone = testHand.Fingers[i].bones[3];
+                s_standardFingertipLengths[i] = fingertipBone.Length;
+            }
+        }
 
-    private RiggedHand _parentRiggedHand = null;
+        private RiggedHand _parentRiggedHand = null;
         /// <summary>
         /// Updates model bone positions and rotations based on tracked hand data.
         /// </summary>
-  public override void UpdateFinger() {
+        public override void UpdateFinger() {
 
-    for (int i = 0; i < bones.Length; ++i) {
+            for (int i = 0; i < bones.Length; ++i) {
 
                 if (!animate)
                 {
@@ -129,12 +137,12 @@ namespace Leap.Unity {
                             position = prox_position;
                             rotation = prox_rotation;
                         }
-                        else if (i == 2)
+                        else if (i == 1)
                         {
                             position = inter_position;
                             rotation = inter_rotation;
                         }
-                        else if (i == 3)
+                        else if (i == 2)
                         {
                             position = distal_position;
                             rotation = distal_rotation;
@@ -182,59 +190,70 @@ namespace Leap.Unity {
                         }
                     }
                 }
-      }
-  }
+            }
+        }
 
-  public void UpdateFingerAnimate(Vector3 prox_pos, Vector3 inter_pos, Vector3 distal_pos, Quaternion prox_rot, Quaternion inter_rot, Quaternion distal_rot)
-  {
-        bool animate = true;
-        Vector3 prox_position = prox_pos;
-        Vector3 inter_position = inter_pos;
-        Vector3 distal_position = distal_pos;
-        Quaternion prox_rotation = prox_rot;
-        Quaternion inter_rotation = inter_rot;
-        Quaternion distal_rotation = distal_rot;
+        public void UpdateFingerAnimate(Vector3 prox_pos, Vector3 inter_pos, Vector3 distal_pos, Quaternion prox_rot, Quaternion inter_rot, Quaternion distal_rot, Vector3 palmFacing)
+        {
+            animate = true;
+            modelPalmFacing = palmFacing;
+            prox_position = prox_pos;
+            inter_position = inter_pos;
+            distal_position = distal_pos;
+            prox_rotation = prox_rot;
+            inter_rotation = inter_rot;
+            distal_rotation = distal_rot;
+            calulateModelFingerPointing();
 
-  }
+        }
 
         private int getLargestComponentIndex(Vector3 pointingVector) {
-      var largestValue = 0f;
-      var largestIdx = 0;
-      for (int i = 0; i < 3; i++) {
-        var testValue = pointingVector[i];
-        if (Mathf.Abs(testValue) > largestValue) {
-          largestIdx = i;
-          largestValue = Mathf.Abs(testValue);
+            var largestValue = 0f;
+            var largestIdx = 0;
+            for (int i = 0; i < 3; i++) {
+                var testValue = pointingVector[i];
+                if (Mathf.Abs(testValue) > largestValue) {
+                    largestIdx = i;
+                    largestValue = Mathf.Abs(testValue);
+                }
+            }
+            return largestIdx;
         }
-      }
-      return largestIdx;
+
+        public void SetupRiggedFinger(bool useMetaCarpals) {
+            findBoneTransforms(useMetaCarpals);
+            modelFingerPointing = calulateModelFingerPointing();
+        }
+
+        private void findBoneTransforms(bool useMetaCarpals) {
+            if (!useMetaCarpals || fingerType == Finger.FingerType.TYPE_THUMB) {
+                bones[1] = transform;
+                bones[2] = transform.GetChild(0).transform;
+                bones[3] = transform.GetChild(0).transform.GetChild(0).transform;
+            }
+            else {
+                bones[0] = transform;
+                bones[1] = transform.GetChild(0).transform;
+                bones[2] = transform.GetChild(0).transform.GetChild(0).transform;
+                bones[3] = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).transform;
+
+            }
+        }
+
+        private Vector3 calulateModelFingerPointing() {
+
+            Vector3 distance = transform.InverseTransformPoint(transform.position) - transform.InverseTransformPoint(transform.GetChild(0).transform.position);
+            Scene m_Scene;
+            string sceneName;
+            m_Scene = SceneManager.GetActiveScene();
+            sceneName = m_Scene.name;
+            if (sceneName.Equals("Learn"))
+            {
+                Debug.Log("1");
+                distance = transform.InverseTransformPoint(prox_position) - transform.InverseTransformPoint(inter_position);
+            }
+            Vector3 zeroed = RiggedHand.CalculateZeroedVector(distance);
+            return zeroed;
+        }
     }
-
-    public void SetupRiggedFinger (bool useMetaCarpals) {
-      findBoneTransforms(useMetaCarpals);
-      modelFingerPointing = calulateModelFingerPointing();
-    }
-
-    private void findBoneTransforms(bool useMetaCarpals) {
-      if (!useMetaCarpals || fingerType == Finger.FingerType.TYPE_THUMB) {
-        bones[1] = transform;
-        bones[2] = transform.GetChild(0).transform;
-        bones[3] = transform.GetChild(0).transform.GetChild(0).transform;
-      }
-      else {
-        bones[0] = transform;
-        bones[1] = transform.GetChild(0).transform;
-        bones[2] = transform.GetChild(0).transform.GetChild(0).transform;
-        bones[3] = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).transform;
-
-      }
-    }
-
-    private Vector3 calulateModelFingerPointing() {
-      Vector3 distance = transform.InverseTransformPoint(transform.position) - transform.InverseTransformPoint(transform.GetChild(0).transform.position);
-      Vector3 zeroed = RiggedHand.CalculateZeroedVector(distance);
-      return zeroed;
-    }
-
-  } 
 }
