@@ -6,6 +6,7 @@ using Leap;
 using Leap.Unity;
 using UnityEngine.UI;
 using System.IO;
+using System.Text;
 
 public class Recorder : MonoBehaviour
 { 
@@ -68,6 +69,10 @@ public class Recorder : MonoBehaviour
 
     Button recButton;
     Button addButton;
+
+    //to get postions of hand for generating a recording of the sign
+    public static List<float> leftAnimationCoords = new List<float>();
+    public static List<float> rightAnimationCoords = new List<float>();
 
     //Coroutine for Countdown timer
     //reference: https://www.youtube.com/watch?v=ulxXGht5D2U
@@ -229,6 +234,19 @@ public class Recorder : MonoBehaviour
         string featureIDString = string.Join(" ", featureIDs);
         return featureIDString;
     }
+
+    public string getJoints(List<float> jointList)
+    {
+        string jointString = string.Join(", ", jointList);
+        return jointString;
+    }
+
+    public string getHeader(List<string> jointList)
+    {
+        string jointString = string.Join(", ", jointList);
+        return jointString;
+    }
+
 
     //Method to check for left hand.
     //if true returns factor of 1 to add to featureID list b/c all left hand features are even 
@@ -471,8 +489,6 @@ public class Recorder : MonoBehaviour
         return featureIDList;
     }
 
-
-
     //method to check if the Palm is Facing the leap
     //returns present featureIDs
     List<int> checkPalmFacingLeapStatic(Hand hand)
@@ -483,16 +499,17 @@ public class Recorder : MonoBehaviour
 
         //find palm normal vector
         Vector palmNormal = hand.PalmNormal;
+        Vector palmDirection = hand.Direction;
 
         //find Y value of palm normal vector
         float palmNormalY = palmNormal[1];
 
-        //finds x value of palm normal vector (checks if fingers face up or down)
-        float palmNormalX = palmNormal[0];
+        //finds y value of palm direction(checks if fingers face up or down)
+        float palmDirectionZ = palmDirection[2];
 
         //if palm normal Y value is less than 0, the palm is facing the leap, add to featureID list
         if (palmNormalY < 0) featureIDList.Add(1 + leftHandFactor(hand));
-        if (palmNormalX < -.3) featureIDList.Add(23 + leftHandFactor(hand));
+        if (palmDirectionZ < -0.7) featureIDList.Add(23 + leftHandFactor(hand));
 
         //return featureID list
         return featureIDList;
@@ -654,14 +671,169 @@ public class Recorder : MonoBehaviour
         writer.Close();
 
         Debug.Log(line);
+        writeToCSV();
         //inform user that the sign has been added
         StartCoroutine((finishedAddingSignFeedback(name)));
+    }
+
+    //writes to CSV file
+    public void writeToCSV()
+    {
+        
+        List<string>header = new List<string>() {"Palm_PositionX", "Palm_PositionY", "Palm_PositionZ", "Palm_RotationX", "Palm_RotationY", "Palm_RotationZ", "Palm_RotationW",
+            "Wrist_PositionX", "Wrist_PositionY", "Wrist_PositionZ", "Forearm_RotationX", "Forearm_RotationY", "Forearm_RotationZ", "Forearm_RotationW",
+            "IndexProx_PostionX", "IndexProx_PostionY", "IndexProx_PostionZ", "IndexProx_RotationX", "IndexProx_RotationY", "IndexProx_RotationZ", "IndexProx_RotationW",
+            "IndexInter_PostionX", "IndexInter_PostionY", "IndexInter_PostionZ", "IndexInter_RotationX", "IndexInter_RotationY", "IndexInter_RotationZ", "IndexInter_RotationW",
+            "IndexDistal_PostionX", "IndexDistal_PostionY", "IndexDistal_PostionZ", "IndexDistal_RotationX", "IndexDistal_RotationY", "IndexDistal_RotationZ", "IndexDistal_RotationW",
+            "MiddleProx_PostionX", "MiddleProx_PostionY", "MiddleProx_PostionZ", "MiddleProx_RotationX", "MiddleProx_RotationY", "MiddleProx_RotationZ", "MiddleProx_RotationW",
+            "MiddleInter_PostionX", "MiddleInter_PostionY", "MiddleInter_PostionZ", "MiddleInter_RotationX", "MiddleInter_RotationY", "MiddleInter_RotationZ", "MiddleInter_RotationW",
+            "MiddleDistal_PostionX", "MiddleDistal_PostionY", "MiddleDistal_PostionZ", "MiddleDistal_RotationX", "MiddleDistal_RotationY", "MiddleDistal_RotationZ", "MiddleDistal_RotationW",
+            "PinkyProx_PostionX", "PinkyProx_PostionY", "PinkyProx_PostionZ", "PinkyProx_RotationX", "PinkyProx_RotationY", "PinkyProx_RotationZ", "PinkyProx_RotationW",
+            "PinkyInter_PostionX", "PinkyInter_PostionY", "PinkyInter_PostionZ", "PinkyInter_RotationX", "PinkyInter_RotationY", "PinkyInter_RotationZ", "PinkyInter_RotationW",
+            "PinkyDistal_PostionX", "PinkyDistal_PostionY", "PinkyDistal_PostionZ", "PinkyDistal_RotationX", "PinkyDistal_RotationY", "PinkyDistal_RotationZ", "PinkyDistal_RotationW",
+            "RingProx_PostionX", "RingProx_PostionY", "RingProx_PostionZ", "RingProx_RotationX", "RingProx_RotationY", "RingProx_RotationZ", "RingProx_RotationW",
+            "RingInter_PostionX", "RingInter_PostionY", "RingInter_PostionZ", "RingInter_RotationX", "RingInter_RotationY", "RingInter_RotationZ", "RingInter_RotationW",
+            "RingDistal_PostionX", "RingDistal_PostionY", "RingDistal_PostionZ", "RingDistal_RotationX", "RingDistal_RotationY", "RingDistal_RotationZ", "RingDistal_RotationW",
+            "ThumbProx_PostionX", "ThumbProx_PostionY", "ThumbProx_PostionZ", "ThumbProx_RotationX", "ThumbProx_RotationY", "ThumbProx_RotationZ", "ThumbProx_RotationW",
+            "ThumbInter_PostionX", "ThumbInter_PostionY", "ThumbInter_PostionZ", "ThumbInter_RotationX", "ThumbInter_RotationY", "ThumbInter_RotationZ", "ThumbInter_RotationW",
+            "ThumbDistal_PostionX", "ThumbDistal_PostionY", "ThumbDistal_PostionZ", "ThumbDistal_RotationX", "ThumbDistal_RotationY", "ThumbDistal_RotationZ", "ThumbDistal_RotationW",
+            "middletoPalmDistanceX", "middletoPalmDistanceY", "middletoPalmDistanceZ"};
+
+        string name;
+        iField = GameObject.Find("SignName").GetComponent<InputField>();
+        name = iField.text;
+        string strFilePath = "";
+
+        strFilePath = "Assets/Scripts/" + name +"_right.csv";
+        File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
+        File.AppendAllText(strFilePath, (getJoints(rightAnimationCoords) + Environment.NewLine));
+
+        if (leftAnimationCoords.Count > 0)
+        {
+            strFilePath = "Assets/Scripts/" + name + "_left.csv";
+            File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
+            File.AppendAllText(strFilePath, (getJoints(leftAnimationCoords) + Environment.NewLine));
+        }
 
     }
 
 
+    //method to get rotation in quaternion
+    private Quaternion calculateRotation(LeapTransform trs)
+    {
+        Vector3 up = trs.yBasis.ToVector3();
+        Vector3 forward = trs.zBasis.ToVector3();
+        return Quaternion.LookRotation(forward, up);
+    }
 
-// Update is called once per frame
+    public void getFrameValues(Hand hand)
+    {
+        List<float> handFrame = new List<float>();
+        List<float> index = new List<float>();
+        List<float> middle = new List<float>();
+        List<float> pinky = new List<float>();
+        List<float> ring = new List<float>();
+        List<float> thumb = new List<float>();
+
+        Arm arm = hand.Arm;
+        Vector palmPos = hand.PalmPosition;
+        Vector wristPos = arm.WristPosition;
+        LeapTransform palmRotation = hand.Basis;
+        Quaternion palmRot = calculateRotation(palmRotation);
+        Quaternion forearmRot = hand.Arm.Rotation.ToQuaternion();
+        Vector middleDistal = new Vector();
+
+        List<Finger> fingers = hand.Fingers;
+
+        foreach (Finger finger in fingers)
+        {
+
+            Bone distalBone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
+            Bone interBone = finger.Bone((Bone.BoneType)(TYPE_INTERMEDIATE));
+            Bone proxBone = finger.Bone((Bone.BoneType)(TYPE_PROXIMAL));
+
+            Vector distal = distalBone.NextJoint;
+            Vector inter = interBone.NextJoint;
+            Vector prox = proxBone.NextJoint;
+
+            Quaternion distalRot = distalBone.Rotation.ToQuaternion();
+            Quaternion interRot = interBone.Rotation.ToQuaternion();
+            Quaternion proxRot = proxBone.Rotation.ToQuaternion();
+
+            if (finger.Type == Finger.FingerType.TYPE_INDEX)
+            {
+                index.Add(prox[0], prox[1], prox[2]);
+                index.Add(inter[0], inter[1], inter[2]);
+                index.Add(distal[0], distal[1], distal[2]);
+                index.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
+                index.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
+                index.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
+
+            }
+
+            if (finger.Type == Finger.FingerType.TYPE_MIDDLE)
+            {
+                middleDistal = distal;
+                middle.Add(prox[0], prox[1], prox[2]);
+                middle.Add(inter[0], inter[1], inter[2]);
+                middle.Add(distal[0], distal[1], distal[2]);
+                middle.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
+                middle.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
+                middle.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
+            }
+
+            if (finger.Type == Finger.FingerType.TYPE_PINKY)
+            {
+                pinky.Add(prox[0], prox[1], prox[2]);
+                pinky.Add(inter[0], inter[1], inter[2]);
+                pinky.Add(distal[0], distal[1], distal[2]);
+                pinky.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
+                pinky.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
+                pinky.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]); 
+            }
+
+            if (finger.Type == Finger.FingerType.TYPE_RING)
+            {
+                ring.Add(prox[0], prox[1], prox[2]);
+                ring.Add(inter[0], inter[1], inter[2]);
+                ring.Add(distal[0], distal[1], distal[2]);
+                ring.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
+                ring.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
+                ring.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
+            }
+
+            if (finger.Type == Finger.FingerType.TYPE_THUMB)
+            {
+                thumb.Add(prox[0], prox[1], prox[2]);
+                thumb.Add(inter[0], inter[1], inter[2]);
+                thumb.Add(distal[0], distal[1], distal[2]);
+                thumb.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
+                thumb.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
+                thumb.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
+            }
+        }
+
+        Vector distance = palmPos - middleDistal;
+
+        handFrame.Add(palmPos[0], palmPos[1], palmPos[2]);
+        handFrame.Add(palmRot[0], palmRot[1], palmRot[2], palmRot[3]);
+        handFrame.Add(wristPos[0], wristPos[1], wristPos[2]);
+        handFrame.Add(forearmRot[0], forearmRot[1], forearmRot[2], forearmRot[3]);
+        handFrame.AddRange(index);
+        handFrame.AddRange(middle);
+        handFrame.AddRange(pinky);
+        handFrame.AddRange(ring);
+        handFrame.AddRange(thumb);
+        handFrame.Add(distance[0], distance[1], distance[2]);
+        
+
+        if (leftHandFactor(hand) == 1) leftAnimationCoords.AddRange(handFrame);
+        else rightAnimationCoords.AddRange(handFrame);
+
+        Debug.Log(getJoints(handFrame));
+    }
+
+    // Update is called once per frame
     public void Update()
     {
         //toggles off countdown timer game object initially (there is an error doing this in start)
@@ -690,9 +862,15 @@ public class Recorder : MonoBehaviour
         //if no hands, nothing to track
         if (numHands == 0) return;
 
-        //static signs will be immediately categorized by frame
-        //if dynamic will find static features for first frame
-        if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
+        if (handFrameCount == 0)
+        {
+            getFrameValues(hands[0]);
+            if (numHands == 2) getFrameValues(hands[1]);
+        }
+
+            //static signs will be immediately categorized by frame
+            //if dynamic will find static features for first frame
+            if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
         {
             //gets static features
             staticFeatureIDs = checkStaticFeatureID(hands);

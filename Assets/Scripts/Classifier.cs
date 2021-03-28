@@ -465,16 +465,17 @@ public class Classifier : MonoBehaviour
 
         //find palm normal vector
         Vector palmNormal = hand.PalmNormal;
+        Vector palmDirection = hand.Direction;
 
         //find Y value of palm normal vector
         float palmNormalY = palmNormal[1];
 
-        //finds x value of palm normal vector (checks if fingers face up or down)
-        float palmNormalX = palmNormal[0];
+        //finds y value of palm direction(checks if fingers face up or down)
+        float palmDirectionZ = palmDirection[2];
 
         //if palm normal Y value is less than 0, the palm is facing the leap, add to featureID list
         if (palmNormalY < 0) featureIDList.Add(1 + leftHandFactor(hand));
-        if (palmNormalX < -0.3) featureIDList.Add(23 + leftHandFactor(hand));
+        if (palmDirectionZ < -0.7) featureIDList.Add(23 + leftHandFactor(hand));
 
         //return featureID list
         return featureIDList;
@@ -619,6 +620,11 @@ public class Classifier : MonoBehaviour
 
         //if no hands, nothing to track
         if (numHands == 0) return;
+
+        Vector palmDirection = hands[0].Direction;
+        //finds y value of palm direction(checks if fingers face up or down)
+        float palmDirectionZ = palmDirection[2];
+        Debug.Log(palmDirectionZ);
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame

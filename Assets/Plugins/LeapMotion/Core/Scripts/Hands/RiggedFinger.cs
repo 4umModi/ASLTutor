@@ -34,6 +34,15 @@ namespace Leap.Unity {
     public Vector3 modelFingerPointing = Vector3.forward;
     public Vector3 modelPalmFacing = -Vector3.up;
 
+    public bool animate = false;
+
+    public Vector3 prox_position = new Vector3(0,0,0); 
+    public Vector3 inter_position = new Vector3(0, 0, 0); 
+    public Vector3 distal_position = new Vector3(0, 0, 0);
+    public Quaternion prox_rotation = new Quaternion(0, 0, 0, 0);
+    public Quaternion inter_rotation = new Quaternion(0, 0, 0, 0);
+    public Quaternion distal_rotation = new Quaternion(0, 0, 0, 0);
+
     public Quaternion Reorientation() {
       return Quaternion.Inverse(Quaternion.LookRotation(modelFingerPointing, -modelPalmFacing));
     }
@@ -55,50 +64,140 @@ namespace Leap.Unity {
     }
 
     private RiggedHand _parentRiggedHand = null;
-    /// <summary>
-    /// Updates model bone positions and rotations based on tracked hand data.
-    /// </summary>
-    public override void UpdateFinger() {
-      for (int i = 0; i < bones.Length; ++i) {
-        if (bones[i] != null) {
-          bones[i].rotation = GetBoneRotation(i) * Reorientation();
-          if (deformPosition) {
-            var boneRootPos = GetJointPosition(i);
-            bones[i].position = boneRootPos;
+        /// <summary>
+        /// Updates model bone positions and rotations based on tracked hand data.
+        /// </summary>
+  public override void UpdateFinger() {
 
-            if (i == 3 && scaleLastFingerBone) {
-              // Set fingertip base bone scale to match the bone length to the fingertip.
-              // This will only scale correctly if the model was constructed to match
-              // the standard "test" edit-time hand model from the TestHandFactory.
-              var boneTipPos = GetJointPosition(i + 1);
-              var boneVec = boneTipPos - boneRootPos;
+    for (int i = 0; i < bones.Length; ++i) {
 
-              // If the rigged hand is scaled (due to a scaled rig), we'll need to divide
-              // out that scale from the bone length to get its normal length.
-              if (_parentRiggedHand == null) {
-                _parentRiggedHand = GetComponentInParent<RiggedHand>();
-              }
-              if (_parentRiggedHand != null) {
-                var parentRiggedHandScale = _parentRiggedHand.transform.lossyScale.x;
-                if (parentRiggedHandScale != 0f && parentRiggedHandScale != 1f) {
-                  boneVec /= parentRiggedHandScale;
+                if (!animate)
+                {
+                    if (bones[i] != null)
+                    {
+
+                        bones[i].rotation = GetBoneRotation(i) * Reorientation();
+                        if (deformPosition)
+                        {
+                            var boneRootPos = GetJointPosition(i);
+                            bones[i].position = boneRootPos;
+
+                            if (i == 3 && scaleLastFingerBone)
+                            {
+                                // Set fingertip base bone scale to match the bone length to the fingertip.
+                                // This will only scale correctly if the model was constructed to match
+                                // the standard "test" edit-time hand model from the TestHandFactory.
+                                var boneTipPos = GetJointPosition(i + 1);
+                                var boneVec = boneTipPos - boneRootPos;
+
+                                // If the rigged hand is scaled (due to a scaled rig), we'll need to divide
+                                // out that scale from the bone length to get its normal length.
+                                if (_parentRiggedHand == null)
+                                {
+                                    _parentRiggedHand = GetComponentInParent<RiggedHand>();
+                                }
+                                if (_parentRiggedHand != null)
+                                {
+                                    var parentRiggedHandScale = _parentRiggedHand.transform.lossyScale.x;
+                                    if (parentRiggedHandScale != 0f && parentRiggedHandScale != 1f)
+                                    {
+                                        boneVec /= parentRiggedHandScale;
+                                    }
+                                }
+
+                                var boneLen = boneVec.magnitude;
+
+                                var standardLen = s_standardFingertipLengths[(int)this.fingerType];
+                                var newScale = bones[i].transform.localScale;
+                                var lengthComponentIdx = getLargestComponentIndex(modelFingerPointing);
+                                newScale[lengthComponentIdx] = boneLen / standardLen;
+                                bones[i].transform.localScale = newScale;
+                            }
+                        }
+                    }
                 }
-              }
 
-              var boneLen = boneVec.magnitude;
+                else
+                {
+                    if (bones[i] != null)
+                    {
+                        Vector3 position = new Vector3(0, 0, 0);
+                        Quaternion rotation = new Quaternion(0, 0, 0, 0);
 
-              var standardLen = s_standardFingertipLengths[(int)this.fingerType];
-              var newScale = bones[i].transform.localScale;
-              var lengthComponentIdx = getLargestComponentIndex(modelFingerPointing);
-              newScale[lengthComponentIdx] = boneLen / standardLen;
-              bones[i].transform.localScale = newScale;
-            }
-          }
-        }
+                        if (i == 0)
+                        {
+                            position = prox_position;
+                            rotation = prox_rotation;
+                        }
+                        else if (i == 2)
+                        {
+                            position = inter_position;
+                            rotation = inter_rotation;
+                        }
+                        else if (i == 3)
+                        {
+                            position = distal_position;
+                            rotation = distal_rotation;
+                        }
+
+
+                        bones[i].rotation = rotation * Reorientation();
+
+                        if (deformPosition)
+                        {
+                            var boneRootPos = position;
+                            bones[i].position = boneRootPos;
+
+                            if (i == 3 && scaleLastFingerBone)
+                            {
+                                // Set fingertip base bone scale to match the bone length to the fingertip.
+                                // This will only scale correctly if the model was constructed to match
+                                // the standard "test" edit-time hand model from the TestHandFactory.
+                                var boneTipPos = GetJointPosition(i + 1);
+                                var boneVec = boneTipPos - boneRootPos;
+
+                                // If the rigged hand is scaled (due to a scaled rig), we'll need to divide
+                                // out that scale from the bone length to get its normal length.
+                                if (_parentRiggedHand == null)
+                                {
+                                    _parentRiggedHand = GetComponentInParent<RiggedHand>();
+                                }
+                                if (_parentRiggedHand != null)
+                                {
+                                    var parentRiggedHandScale = _parentRiggedHand.transform.lossyScale.x;
+                                    if (parentRiggedHandScale != 0f && parentRiggedHandScale != 1f)
+                                    {
+                                        boneVec /= parentRiggedHandScale;
+                                    }
+                                }
+
+                                var boneLen = boneVec.magnitude;
+
+                                var standardLen = s_standardFingertipLengths[(int)this.fingerType];
+                                var newScale = bones[i].transform.localScale;
+                                var lengthComponentIdx = getLargestComponentIndex(modelFingerPointing);
+                                newScale[lengthComponentIdx] = boneLen / standardLen;
+                                bones[i].transform.localScale = newScale;
+                            }
+                        }
+                    }
+                }
       }
-    }
+  }
 
-    private int getLargestComponentIndex(Vector3 pointingVector) {
+  public void UpdateFingerAnimate(Vector3 prox_pos, Vector3 inter_pos, Vector3 distal_pos, Quaternion prox_rot, Quaternion inter_rot, Quaternion distal_rot)
+  {
+        bool animate = true;
+        Vector3 prox_position = prox_pos;
+        Vector3 inter_position = inter_pos;
+        Vector3 distal_position = distal_pos;
+        Quaternion prox_rotation = prox_rot;
+        Quaternion inter_rotation = inter_rot;
+        Quaternion distal_rotation = distal_rot;
+
+  }
+
+        private int getLargestComponentIndex(Vector3 pointingVector) {
       var largestValue = 0f;
       var largestIdx = 0;
       for (int i = 0; i < 3; i++) {

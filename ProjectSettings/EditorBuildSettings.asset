@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Feedback.unity
     guid: 1f3415ad0d4929d43b7a8c0709274dd5
+  - enabled: 1
+    path: Assets/Scenes/Learn.unity
+    guid: 230e03484a737e34ebb46fbeacef5ed5
   m_configObjects: {}

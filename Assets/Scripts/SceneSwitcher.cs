@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -35,6 +36,12 @@ public class SceneSwitcher : MonoBehaviour
     public void RecordScene()
     {
         SceneManager.LoadScene(4);
+    }
+
+    //changes scene to learn scene (for seeing animation of signs)
+    public void LearnScene()
+    {
+        SceneManager.LoadScene(6);
     }
 
     //next scene

@@ -52,7 +52,7 @@ public class SignMenu : MonoBehaviour
 
         for (int i = 0; i < num; i++)
         {
-            
+
             //breaks whenever reaches signNum
             if (i >= signNum) break;
             int j = i;
@@ -68,8 +68,8 @@ public class SignMenu : MonoBehaviour
 
             //sets components of button equal to values in array
             sign.transform.GetChild(0).GetComponent<Text>().text = allSigns[j].name;
-            sign.transform.GetChild (1).GetComponent<Text>().text = allSigns[j].isDynamic;
-            sign.transform.GetChild (2).GetComponent<Text>().text = allSigns[j].signFeatureID;
+            sign.transform.GetChild(1).GetComponent<Text>().text = allSigns[j].isDynamic;
+            sign.transform.GetChild(2).GetComponent<Text>().text = allSigns[j].signFeatureID;
 
             //Adds a Listener to button, with the sign information
             sign.GetComponent<Button>().onClick.AddListener(() => sendToClassify(allSigns[j]));
@@ -91,14 +91,14 @@ public class SignMenu : MonoBehaviour
     string getDynamic(string signString)
     {
         int firstSpaceIndex = signString.IndexOf(" ");
-        char signIsDynamic = signString[firstSpaceIndex+1];
+        char signIsDynamic = signString[firstSpaceIndex + 1];
         string signDynamic = signIsDynamic.ToString();
         return signDynamic;
     }
 
     //gets features based on index of first space
     string getFeatures(string signString)
-    { 
+    {
         int firstSpaceIndex = signString.IndexOf(" ");
         string signFeatures = signString.Substring(firstSpaceIndex + 3);
         return signFeatures;
@@ -106,11 +106,11 @@ public class SignMenu : MonoBehaviour
 
 
     //method that sends sign to be classified
-    void sendToClassify(Sign s) 
+    void sendToClassify(Sign s)
     {
         //loads new scene
         SceneManager.LoadScene(2);
-        
+
         //object of other script
         CurrentSign signInfo;
 

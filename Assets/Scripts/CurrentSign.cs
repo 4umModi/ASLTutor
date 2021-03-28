@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
+using System.IO;
+using System.Text;
+
 
 //This script will hold the value of the current sign, between the SignMenu Scene and Tutoring Scene
 public class CurrentSign : MonoBehaviour
@@ -71,6 +74,17 @@ public class CurrentSign : MonoBehaviour
             if (needBreak) break;
             features = features.Substring(firstSpaceIndex+1);
         }
+
+        //write to text files for scripts that can not access script
+        //quick fix for dependency issues
+        string filePath = "Assets/Scripts/currentsign.txt";
+        StreamWriter writer = new StreamWriter(filePath, false);
+        string dynamicString = "0";
+        if (currentSign.isDynamic) dynamicString = "1";
+        string line = signName + " " + dynamicString;
+        writer.WriteLine(line);
+        writer.Close();
+
     }
 
     //these methods are get methods to be used by the Classifier script
