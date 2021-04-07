@@ -9,6 +9,28 @@ TagManager:
   - CurrentSign
   - Finger
   - hands
+  - left
+  - right
+  - Front
+  - Back
+  - Side1
+  - Side2
+  - mainCanvas
+  - imageCanvas
+  - nextframe
+  - dyntxt
+  - header
+  - signbox
+  - signbox2
+  - prompt
+  - done
+  - preview
+  - frontprev
+  - backprev
+  - side1prev
+  - side2prev
+  - nameholder
+  - dynholder
   layers:
   - Default
   - TransparentFX

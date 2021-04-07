@@ -42,14 +42,14 @@ namespace Leap.Unity {
         public Vector3 modelFingerPointing = Vector3.forward;
         public Vector3 modelPalmFacing = -Vector3.up;
 
-        public bool animate = false;
+        /*public bool animate = false;
 
         public Vector3 prox_position = new Vector3(0, 0, 0);
         public Vector3 inter_position = new Vector3(0, 0, 0);
         public Vector3 distal_position = new Vector3(0, 0, 0);
         public Quaternion prox_rotation = new Quaternion(0, 0, 0, 0);
         public Quaternion inter_rotation = new Quaternion(0, 0, 0, 0);
-        public Quaternion distal_rotation = new Quaternion(0, 0, 0, 0);
+        public Quaternion distal_rotation = new Quaternion(0, 0, 0, 0);*/
 
         public Quaternion Reorientation() {
             return Quaternion.Inverse(Quaternion.LookRotation(modelFingerPointing, -modelPalmFacing));
@@ -75,55 +75,57 @@ namespace Leap.Unity {
         /// <summary>
         /// Updates model bone positions and rotations based on tracked hand data.
         /// </summary>
-        public override void UpdateFinger() {
+        public override void UpdateFinger()
+        {
 
-            for (int i = 0; i < bones.Length; ++i) {
+            for (int i = 0; i < bones.Length; ++i)
+            {
 
-                if (!animate)
+                /*if (!animate)
+                {*/
+                if (bones[i] != null)
                 {
-                    if (bones[i] != null)
+
+                    bones[i].rotation = GetBoneRotation(i) * Reorientation();
+                    if (deformPosition)
                     {
+                        var boneRootPos = GetJointPosition(i);
+                        bones[i].position = boneRootPos;
 
-                        bones[i].rotation = GetBoneRotation(i) * Reorientation();
-                        if (deformPosition)
+                        if (i == 3 && scaleLastFingerBone)
                         {
-                            var boneRootPos = GetJointPosition(i);
-                            bones[i].position = boneRootPos;
+                            // Set fingertip base bone scale to match the bone length to the fingertip.
+                            // This will only scale correctly if the model was constructed to match
+                            // the standard "test" edit-time hand model from the TestHandFactory.
+                            var boneTipPos = GetJointPosition(i + 1);
+                            var boneVec = boneTipPos - boneRootPos;
 
-                            if (i == 3 && scaleLastFingerBone)
+                            // If the rigged hand is scaled (due to a scaled rig), we'll need to divide
+                            // out that scale from the bone length to get its normal length.
+                            if (_parentRiggedHand == null)
                             {
-                                // Set fingertip base bone scale to match the bone length to the fingertip.
-                                // This will only scale correctly if the model was constructed to match
-                                // the standard "test" edit-time hand model from the TestHandFactory.
-                                var boneTipPos = GetJointPosition(i + 1);
-                                var boneVec = boneTipPos - boneRootPos;
-
-                                // If the rigged hand is scaled (due to a scaled rig), we'll need to divide
-                                // out that scale from the bone length to get its normal length.
-                                if (_parentRiggedHand == null)
-                                {
-                                    _parentRiggedHand = GetComponentInParent<RiggedHand>();
-                                }
-                                if (_parentRiggedHand != null)
-                                {
-                                    var parentRiggedHandScale = _parentRiggedHand.transform.lossyScale.x;
-                                    if (parentRiggedHandScale != 0f && parentRiggedHandScale != 1f)
-                                    {
-                                        boneVec /= parentRiggedHandScale;
-                                    }
-                                }
-
-                                var boneLen = boneVec.magnitude;
-
-                                var standardLen = s_standardFingertipLengths[(int)this.fingerType];
-                                var newScale = bones[i].transform.localScale;
-                                var lengthComponentIdx = getLargestComponentIndex(modelFingerPointing);
-                                newScale[lengthComponentIdx] = boneLen / standardLen;
-                                bones[i].transform.localScale = newScale;
+                                _parentRiggedHand = GetComponentInParent<RiggedHand>();
                             }
+                            if (_parentRiggedHand != null)
+                            {
+                                var parentRiggedHandScale = _parentRiggedHand.transform.lossyScale.x;
+                                if (parentRiggedHandScale != 0f && parentRiggedHandScale != 1f)
+                                {
+                                    boneVec /= parentRiggedHandScale;
+                                }
+                            }
+
+                            var boneLen = boneVec.magnitude;
+
+                            var standardLen = s_standardFingertipLengths[(int)this.fingerType];
+                            var newScale = bones[i].transform.localScale;
+                            var lengthComponentIdx = getLargestComponentIndex(modelFingerPointing);
+                            newScale[lengthComponentIdx] = boneLen / standardLen;
+                            bones[i].transform.localScale = newScale;
                         }
                     }
                 }
+                /*}
 
                 else
                 {
@@ -132,25 +134,25 @@ namespace Leap.Unity {
                         Vector3 position = new Vector3(0, 0, 0);
                         Quaternion rotation = new Quaternion(0, 0, 0, 0);
 
-                        if (i == 0)
+                        if (i == 1)
                         {
                             position = prox_position;
                             rotation = prox_rotation;
                         }
-                        else if (i == 1)
+                        else if (i == 2)
                         {
                             position = inter_position;
                             rotation = inter_rotation;
                         }
-                        else if (i == 2)
+                        else if (i == 3)
                         {
                             position = distal_position;
                             rotation = distal_rotation;
                         }
 
 
-                        bones[i].rotation = rotation * Reorientation();
-
+                        bones[i].rotation = rotation  * Reorientation();
+                        
                         if (deformPosition)
                         {
                             var boneRootPos = position;
@@ -190,13 +192,15 @@ namespace Leap.Unity {
                         }
                     }
                 }
+            }*/
+
             }
         }
 
-        public void UpdateFingerAnimate(Vector3 prox_pos, Vector3 inter_pos, Vector3 distal_pos, Quaternion prox_rot, Quaternion inter_rot, Quaternion distal_rot, Vector3 palmFacing)
+        /*public void UpdateFingerAnimate(Vector3 prox_pos, Vector3 inter_pos, Vector3 distal_pos, Quaternion prox_rot, Quaternion inter_rot, Quaternion distal_rot, Vector3 palmFacing)
         {
             animate = true;
-            modelPalmFacing = palmFacing;
+            //modelPalmFacing = palmFacing;
             prox_position = prox_pos;
             inter_position = inter_pos;
             distal_position = distal_pos;
@@ -205,7 +209,7 @@ namespace Leap.Unity {
             distal_rotation = distal_rot;
             calulateModelFingerPointing();
 
-        }
+        }*/
 
         private int getLargestComponentIndex(Vector3 pointingVector) {
             var largestValue = 0f;
@@ -236,22 +240,20 @@ namespace Leap.Unity {
                 bones[1] = transform.GetChild(0).transform;
                 bones[2] = transform.GetChild(0).transform.GetChild(0).transform;
                 bones[3] = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).transform;
-
             }
         }
 
         private Vector3 calulateModelFingerPointing() {
 
             Vector3 distance = transform.InverseTransformPoint(transform.position) - transform.InverseTransformPoint(transform.GetChild(0).transform.position);
-            Scene m_Scene;
+            /*Scene m_Scene;
             string sceneName;
             m_Scene = SceneManager.GetActiveScene();
             sceneName = m_Scene.name;
             if (sceneName.Equals("Learn"))
             {
-                Debug.Log("1");
                 distance = transform.InverseTransformPoint(prox_position) - transform.InverseTransformPoint(inter_position);
-            }
+            }*/
             Vector3 zeroed = RiggedHand.CalculateZeroedVector(distance);
             return zeroed;
         }

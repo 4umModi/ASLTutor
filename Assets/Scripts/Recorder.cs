@@ -10,11 +10,36 @@ using System.Text;
 
 public class Recorder : MonoBehaviour
 { 
+
+    //for taking screenshots
+    private static Recorder instance;
+    Camera cam;
+
     //Bone Types
     int TYPE_METACARPAL = 0;
     int TYPE_PROXIMAL = 1;
     int TYPE_INTERMEDIATE = 2;
     int TYPE_DISTAL = 3;
+
+    //For camera control when taking images
+    public Camera mainCamera;
+    public Camera frontCamera;
+    public Camera backCamera;
+    public Camera side1Camera;
+    public Camera side2Camera;
+    public Canvas mainCanvas;
+    public Canvas imageCanvas;
+    public Button nextFrame;
+    public Text dynamicText;
+    public int dynamicImageCounter = 0;
+    public UnityEngine.UI.Image signbox;
+    public UnityEngine.UI.Image signbox2;
+    public Button done;
+    public Text userText;
+    public Canvas imagePreview;
+    public GameObject frontIMG;
+    public Text signname;
+    public Text dynamicValue;
 
     //creates controller variable
     Controller controller;
@@ -43,16 +68,17 @@ public class Recorder : MonoBehaviour
     bool recording;
 
     //creates boolean variable for dynamic signs
-    static bool isDynamic = false;
+    public static bool isDynamic = false;
 
     public Toggle dynamicToggle;
+    public Toggle imagesToggle;
 
     //variable for number of hands
     int numHands;
 
     //variables for countdown timer
     GameObject countDown;
-    int countdownTime;
+    public int countdownTime;
     bool disableCountdown = true;
 
     //object of other script
@@ -91,13 +117,13 @@ public class Recorder : MonoBehaviour
         //changes size to 300
         countDown.GetComponent<Text>().fontSize = 45;
 
-        //sets time to 6
-        countdownTime = 6;
+        //sets time to 4
+        countdownTime = 4;
 
-        //counts down from 5 to 0
+        //counts down from 3 to 0
         while (countdownTime > 0)
         {
-            if (countdownTime == 6)
+            if (countdownTime == 4)
             {
                 countDown.GetComponent<Text>().text = "Please start with the beginning \n handshape after the countdown";
                 yield return new WaitForSeconds(2f);
@@ -139,7 +165,24 @@ public class Recorder : MonoBehaviour
         //changes size to 300
         countDown.GetComponent<Text>().fontSize = 45;
 
-        countDown.GetComponent<Text>().text = "Finished recording!";
+        countDown.GetComponent<Text>().text = "Finished recording!\n If you would like to add images for learning check add images before pressing Add Sign";
+        yield return new WaitForSeconds(2f);
+
+        //toggles off text
+        countDown.gameObject.SetActive(false);
+        addButton.interactable = true;
+        recButton.interactable = true;
+    }
+
+    IEnumerator finishedImagesFeedback()
+    {
+        //toggles on countdown text
+        countDown.gameObject.SetActive(true);
+
+        //changes size to 300
+        countDown.GetComponent<Text>().fontSize = 45;
+
+        countDown.GetComponent<Text>().text = "Added Images!";
         yield return new WaitForSeconds(2f);
 
         //toggles off text
@@ -168,9 +211,136 @@ public class Recorder : MonoBehaviour
         recButton.interactable = true;
     }
 
+    //feedback to user when sign has been added
+    IEnumerator userPrompt(string s)
+    {
+        addButton.interactable = false;
+        recButton.interactable = false;
+        //toggles on countdown text
+        countDown.gameObject.SetActive(true);
+
+        //changes size to 300
+        countDown.GetComponent<Text>().fontSize = 45;
+
+        countDown.GetComponent<Text>().text = s;
+        yield return new WaitForSeconds(2f);
+
+        signbox.enabled = true;
+
+        int counter = 3;
+
+        while (counter > 0)
+        {
+
+           countDown.GetComponent<Text>().fontSize = 300;
+           countDown.GetComponent<Text>().text = counter.ToString();
+
+            yield return new WaitForSeconds(1f);
+
+            counter = counter - 1;
+        }
+
+        //tells user to sign
+        countDown.GetComponent<Text>().text = "Sign!";
+
+
+        //toggles off text
+        countDown.gameObject.SetActive(false);
+        addButton.interactable = true;
+        recButton.interactable = true;
+        signbox.enabled = false;
+        postRender();
+    }
+
+    IEnumerator userPromptDynamic(string s)
+    {
+
+        done.interactable = false;
+        nextFrame.interactable = false;
+        //toggles on countdown text
+        userText.enabled = true;
+
+        //changes size to 300
+        userText.GetComponent<Text>().fontSize = 45;
+
+        userText.GetComponent<Text>().text = s;
+        yield return new WaitForSeconds(2f);
+
+        signbox2.enabled = true;
+
+        int counter = 3;
+
+        while (counter > 0)
+        {
+
+            userText.GetComponent<Text>().fontSize = 300;
+            userText.GetComponent<Text>().text = counter.ToString();
+
+            yield return new WaitForSeconds(1f);
+
+            counter = counter - 1;
+        }
+
+        //tells user to sign
+        userText.GetComponent<Text>().text = "Sign!";
+
+
+        //toggles off text
+        userText.enabled = false;
+        done.interactable = true;
+        nextFrame.interactable = true;
+        signbox2.enabled = false;
+        imagePreview.enabled = false;
+        postRender();
+    }
+
+
+    private void Awake()
+    {
+        instance = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+
+        signbox = GameObject.FindGameObjectWithTag("signbox").GetComponent<UnityEngine.UI.Image>();
+        signbox.enabled = false;
+
+        imagePreview = GameObject.FindGameObjectWithTag("preview").GetComponent<Canvas>();
+        imagePreview.enabled = false;
+
+        signbox2 = GameObject.FindGameObjectWithTag("signbox2").GetComponent<UnityEngine.UI.Image>();
+        signbox2.enabled = false;
+
+        mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+
+        frontCamera = GameObject.FindGameObjectWithTag("Front").GetComponent<Camera>();
+        backCamera = GameObject.FindGameObjectWithTag("Back").GetComponent<Camera>();
+        side1Camera = GameObject.FindGameObjectWithTag("Side1").GetComponent<Camera>();
+        side2Camera = GameObject.FindGameObjectWithTag("Side2").GetComponent<Camera>();
+
+        mainCamera.enabled = true;
+        frontCamera.enabled = false;
+        backCamera.enabled = false;
+        side1Camera.enabled = false;
+        side2Camera.enabled = false;
+
+        mainCanvas = GameObject.FindGameObjectWithTag("mainCanvas").GetComponent<Canvas>(); 
+        imageCanvas = GameObject.FindGameObjectWithTag("imageCanvas").GetComponent<Canvas>();
+        nextFrame = GameObject.FindGameObjectWithTag("nextframe").GetComponent<Button>();
+        done = GameObject.FindGameObjectWithTag("done").GetComponent<Button>();
+        dynamicText = GameObject.FindGameObjectWithTag("dyntxt").GetComponent<Text>();
+        userText = GameObject.FindGameObjectWithTag("prompt").GetComponent<Text>();
+
+        mainCanvas.enabled = true;
+        imageCanvas.enabled = false;
+        nextFrame.interactable = false;
+        done.interactable = true;
+        dynamicText.enabled = false;
+        userText.enabled = false;
+
+        mainCanvas.worldCamera = mainCamera;
 
         //finds countdown game object
         if (disableCountdown) 
@@ -181,8 +351,12 @@ public class Recorder : MonoBehaviour
             addButton.interactable = false;
         }
 
-        //sets count down time to 6
-        countdownTime = 6;
+        signname = GameObject.FindGameObjectWithTag("nameholder").GetComponent<Text>();
+        dynamicValue = GameObject.FindGameObjectWithTag("dynholder").GetComponent<Text>();
+
+
+        //sets count down time to 4
+        countdownTime = 4;
 
         //creates controller for leap
         controller = new Controller();
@@ -626,6 +800,178 @@ public class Recorder : MonoBehaviour
         return featureIDList;
     }
 
+    public void askUserForImages(bool isDynamic)
+    {
+
+        StartCoroutine(userPrompt("Please record the sign again in \nthe black box to take an image of it"));
+
+    }
+
+    public void askUserForImagesDynamic()
+    {
+        StartCoroutine(userPromptDynamic("Please record the sign again in \nthe black box to take an image of it"));
+        imagePreview.enabled = false;
+    }
+
+    //deletes last create image
+    public void redoImage()
+    {
+        string name = signname.text;
+        string path = Application.dataPath + "/Resources/DataImages/" + name + "/" + name;
+        if (dynamicValue.text.Equals("0") && File.Exists(path + "_front.png"))
+        {
+            File.Delete(path + "_front.png");
+            File.Delete(path + "_back.png");
+            File.Delete(path + "_side1.png");
+            File.Delete(path + "_side2.png");
+        }
+        else
+        {
+            File.Delete(path + "_front-" + dynamicValue.text + ".png");
+            File.Delete(path + "_back-" + dynamicValue.text + ".png");
+            File.Delete(path + "_side1-" + dynamicValue.text + ".png");
+            File.Delete(path + "_side2-" + dynamicValue.text + ".png");
+        }
+
+        askUserForImagesDynamic();
+        nextFrame.enabled = false;
+
+    }
+
+    public void postRender()
+    {
+        mainCanvas.enabled = false;
+        mainCamera.enabled = false;
+
+        imageCanvas.enabled = true;
+        backCamera.enabled = true;
+
+        string name = signname.text;
+
+        string path = Application.dataPath + "/Resources/DataImages/" + name +"/";
+
+        int width = Screen.width / 2;
+        int height = Screen.height / 2;
+        int startX = Screen.width / 2;
+        int startY = 0;
+
+        string frontPath = path + name + "_front.png";
+        string backPath = path + name + "_back.png";
+        string side1Path = path + name + "_side1.png";
+        string side2Path = path + name + "_side2.png";
+
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (i == 0) cam = frontCamera;
+            if (i == 1) cam = backCamera;
+            if (i == 2) cam = side1Camera;
+            if (i == 3) cam = side2Camera;
+
+            cam.enabled = true;
+            imageCanvas.worldCamera = cam;
+            RenderTexture renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
+            cam.targetTexture = renderTexture;
+            cam.Render();
+            cam.targetTexture = null;
+
+            RenderTexture.active = renderTexture;
+            Texture2D screenshot = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+            Rect pixelRect = new Rect(startX, startY, width, height);
+            screenshot.ReadPixels(pixelRect, 0, 0);
+            screenshot.Apply();
+            RenderTexture.active = null;
+
+            byte[] bytes = screenshot.EncodeToPNG();
+            Destroy(screenshot);
+
+            if (!isDynamic)
+            {
+                if (i == 0) System.IO.File.WriteAllBytes(path + name + "_front.png", bytes);
+                if (i == 1) System.IO.File.WriteAllBytes(path + name + "_back.png", bytes);
+                if (i == 2) System.IO.File.WriteAllBytes(path + name + "_side1.png", bytes);
+                if (i == 3) System.IO.File.WriteAllBytes(path + name + "_side2.png", bytes);
+            }
+
+            else
+            {
+                string file = "";
+                if (i == 0) file = path + name + "_front-";
+                if (i == 1) file = path + name + "_back-";
+                if (i == 2) file = path + name + "_side1-";
+                if (i == 3) file = path + name + "_side2-";
+
+                int dynamicNum = 1;
+
+                for (int j = 0; j<7; j++)
+                {
+                    if (System.IO.File.Exists(file + dynamicNum.ToString() + ".png")) dynamicNum = dynamicNum + 1;
+                    else break;
+                    dynamicValue.text = dynamicNum.ToString();
+                }
+
+                System.IO.File.WriteAllBytes(file + dynamicNum.ToString() + ".png", bytes);
+
+                if (i == 0) frontPath = file + dynamicNum.ToString() + ".png";
+                if (i == 1) backPath = file + dynamicNum.ToString() + ".png";
+                if (i == 2) side1Path = file + dynamicNum.ToString() + ".png";
+                if (i == 3) side2Path = file + dynamicNum.ToString() + ".png";
+            }
+        }
+
+        backCamera.enabled = false;
+        frontCamera.enabled = false;
+        side1Camera.enabled = false;
+        side2Camera.enabled = false;
+
+        mainCamera.enabled = true;
+        imageCanvas.worldCamera = mainCamera;
+        signbox2.enabled = false;
+        if (isDynamic)
+        {
+            nextFrame.interactable = true;
+            dynamicText.enabled = true;
+        }
+
+        //Allows user to view images just taken, if user needs to redo it, then clicks redo button
+
+        imagePreview.enabled = true;
+
+        UnityEngine.UI.Image frontIMG = GameObject.FindGameObjectWithTag("frontprev").GetComponent<UnityEngine.UI.Image>();
+        UnityEngine.UI.Image backIMG = GameObject.FindGameObjectWithTag("backprev").GetComponent<UnityEngine.UI.Image>();
+        UnityEngine.UI.Image side1IMG = GameObject.FindGameObjectWithTag("side1prev").GetComponent<UnityEngine.UI.Image>();
+        UnityEngine.UI.Image side2IMG = GameObject.FindGameObjectWithTag("side2prev").GetComponent<UnityEngine.UI.Image>();
+
+        byte[] frontBytes = System.IO.File.ReadAllBytes(frontPath);
+        byte[] backBytes = System.IO.File.ReadAllBytes(backPath);
+        byte[] side1Bytes = System.IO.File.ReadAllBytes(side1Path);
+        byte[] side2Bytes = System.IO.File.ReadAllBytes(side2Path);
+
+        Texture2D frontTex = new Texture2D(2, 2);
+        Texture2D backTex = new Texture2D(2, 2);
+        Texture2D side1Tex = new Texture2D(2, 2);
+        Texture2D side2Tex = new Texture2D(2, 2);
+
+        frontTex.LoadImage(frontBytes);
+        backTex.LoadImage(backBytes);
+        side1Tex.LoadImage(side1Bytes);
+        side2Tex.LoadImage(side2Bytes);
+
+        Sprite frontSprite = Sprite.Create(frontTex, new Rect(0.0f, 0.0f, frontTex.width, frontTex.height), new Vector2(0.5f, 0.5f), 100.0f);
+        Sprite backSprite = Sprite.Create(backTex, new Rect(0.0f, 0.0f, backTex.width, backTex.height), new Vector2(0.5f, 0.5f), 100.0f);
+        Sprite side1Sprite = Sprite.Create(side1Tex, new Rect(0.0f, 0.0f, side1Tex.width, side1Tex.height), new Vector2(0.5f, 0.5f), 100.0f);
+        Sprite side2Sprite = Sprite.Create(side2Tex, new Rect(0.0f, 0.0f, side2Tex.width, side2Tex.height), new Vector2(0.5f, 0.5f), 100.0f);
+
+        frontIMG.sprite = frontSprite;
+        backIMG.sprite = backSprite;
+        side2IMG.sprite = side1Sprite;
+        side1IMG.sprite = side2Sprite;
+
+    }
+
     //adds sign information to text file
     public void addSign()
     {
@@ -636,10 +982,15 @@ public class Recorder : MonoBehaviour
         Toggle d = dynamicToggle.GetComponent<Toggle>();
         isDynamic = d.isOn;
 
+        if (isDynamic) dynamicValue.text = "1";
+        else dynamicValue.text = "0";
+
+
         //get the name of the string
         string name;
         iField = GameObject.Find("SignName").GetComponent<InputField>();
         name = iField.text;
+        signname.text = name;
 
         //if there is no string name, return
         if (name.Length == 0) return;
@@ -671,11 +1022,25 @@ public class Recorder : MonoBehaviour
         writer.Close();
 
         Debug.Log(line);
-        writeToCSV();
+
+        //find value of dynamic toggle
+        Toggle images = imagesToggle.GetComponent<Toggle>();
+        bool addImages = images.isOn;
+
+        Debug.Log(addImages);
+
+        if (addImages) askUserForImages(isDynamic);
         //inform user that the sign has been added
-        StartCoroutine((finishedAddingSignFeedback(name)));
+        else StartCoroutine((finishedAddingSignFeedback(name)));
     }
 
+    public void doneImages()
+    {
+        StartCoroutine(finishedImagesFeedback());
+    }
+
+    //For trying to animate the hand
+    /*
     //writes to CSV file
     public void writeToCSV()
     {
@@ -698,15 +1063,18 @@ public class Recorder : MonoBehaviour
             "ThumbInter_PostionX", "ThumbInter_PostionY", "ThumbInter_PostionZ", "ThumbInter_RotationX", "ThumbInter_RotationY", "ThumbInter_RotationZ", "ThumbInter_RotationW",
             "ThumbDistal_PostionX", "ThumbDistal_PostionY", "ThumbDistal_PostionZ", "ThumbDistal_RotationX", "ThumbDistal_RotationY", "ThumbDistal_RotationZ", "ThumbDistal_RotationW",
             "middletoPalmDistanceX", "middletoPalmDistanceY", "middletoPalmDistanceZ"};
-
+        
         string name;
         iField = GameObject.Find("SignName").GetComponent<InputField>();
         name = iField.text;
         string strFilePath = "";
 
-        strFilePath = "Assets/Scripts/" + name +"_right.csv";
-        File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
-        File.AppendAllText(strFilePath, (getJoints(rightAnimationCoords) + Environment.NewLine));
+        if (rightAnimationCoords.Count > 0)
+        {
+            strFilePath = "Assets/Scripts/" + name + "_right.csv";
+            File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
+            File.AppendAllText(strFilePath, (getJoints(rightAnimationCoords) + Environment.NewLine));
+        }
 
         if (leftAnimationCoords.Count > 0)
         {
@@ -718,6 +1086,9 @@ public class Recorder : MonoBehaviour
     }
 
 
+
+
+    /*
     //method to get rotation in quaternion
     private Quaternion calculateRotation(LeapTransform trs)
     {
@@ -831,7 +1202,7 @@ public class Recorder : MonoBehaviour
         else rightAnimationCoords.AddRange(handFrame);
 
         Debug.Log(getJoints(handFrame));
-    }
+    }*/
 
     // Update is called once per frame
     public void Update()
@@ -862,15 +1233,9 @@ public class Recorder : MonoBehaviour
         //if no hands, nothing to track
         if (numHands == 0) return;
 
-        if (handFrameCount == 0)
-        {
-            getFrameValues(hands[0]);
-            if (numHands == 2) getFrameValues(hands[1]);
-        }
-
             //static signs will be immediately categorized by frame
             //if dynamic will find static features for first frame
-            if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
+        if (recording && (handFrameCount % 800 == 0) && (!isDynamic || handFrameCount == 0))
         {
             //gets static features
             staticFeatureIDs = checkStaticFeatureID(hands);
@@ -889,7 +1254,7 @@ public class Recorder : MonoBehaviour
             //puts right hand at 0 index and left hand at 1 index
             hands = twoHandsStatic(hands);
 
-            //fills hand with frames
+            //fills hand with get
             if (handFrameCount % framesSkip == 0)
             {
                 rightHandFrames.Add(hands[0]);

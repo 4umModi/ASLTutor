@@ -25,7 +25,8 @@ namespace Leap.Unity {
     /// <summary> A skinned and jointed 3D HandModel. </summary>
     public class RiggedHand : HandModel {
 
-        //added to stop updated hand change to manipulate to show video of hand signing
+        //changes made in an attempt to animate the hand based off of coordinates
+        /*
         public bool isLeft;
         public bool stop = false;
         List<string> stringSignArray = new List<string>();
@@ -33,6 +34,16 @@ namespace Leap.Unity {
         public string signDynamic;
         public static List<Vector3> jointPositions = new List<Vector3>();
         public static List<Quaternion> jointRotations = new List<Quaternion>();
+        public Scene m_Scene;
+        public string sceneName;
+
+        public Vector3 palmPosition = new Vector3(0, 0, 0);
+        public Vector3 wristPosition = new Vector3(0,0,0);
+        public Quaternion palmRotation = new Quaternion(0,0,0,0);
+        public Quaternion wristRotation = new Quaternion(0,0,0,0);
+
+        //object of other script
+        public InputField iField;
 
         int PALM_INDEX = 0;
         int WRIST_INDEX = 1;
@@ -54,7 +65,7 @@ namespace Leap.Unity {
         int USER_BONE_INDEX = 17;
 
         RiggedFinger riggedFinger;
-        HandEnableDisable handToggle;
+        HandEnableDisable handToggle;*/
 
         public override ModelType HandModelType { get { return ModelType.Graphics; } }
         public override bool SupportsEditorPersistence() { return true; }
@@ -119,11 +130,8 @@ namespace Leap.Unity {
           "bones.")]
         public Vector3 modelPalmFacing = new Vector3(0, 0, 0);
 
-        public void getValues()
+        /*public void getValues()
         {
-
-            Scene m_Scene;
-            string sceneName;
             m_Scene = SceneManager.GetActiveScene();
             sceneName = m_Scene.name;
             if (sceneName.Equals("Learn"))
@@ -148,9 +156,9 @@ namespace Leap.Unity {
 
                 createLocalPos(signName, signDynamic);
             }
-        }
+        }*/
 
-        public void createLocalPos(string signName, string signDynamic)
+        /*public void createLocalPos(string signName, string signDynamic)
         {
 
             Debug.Log("Here!");
@@ -205,8 +213,9 @@ namespace Leap.Unity {
                     jointRotations.Add(qua);
                 }
             }
-        }
+        }*/
 
+        /*
         //adds each line of the textfile list
         List<string> readTextFile(string filePath)
         {
@@ -217,7 +226,7 @@ namespace Leap.Unity {
 
             signsFile.Close();
             return signArray;
-        }
+        }*/
 
         /// <summary> Rotation derived from the `modelFingerPointing` and
         /// `modelPalmFacing` vectors in the RiggedHand inspector. </summary>
@@ -231,9 +240,7 @@ namespace Leap.Unity {
 
         public override void InitHand()
         {
-            getValues();
             UpdateHand();
-            calculateModelPalmFacing(palm, fingers[2].transform, fingers[1].transform);
             calculateModelFingerPointing();
             updateDeformPositionsInFingers();
             updateScaleLastFingerBoneInFingers();
@@ -241,8 +248,8 @@ namespace Leap.Unity {
         }
 
         public override void UpdateHand() {
-            if (!stop)
-            {
+            /*if (!stop)
+            {*/
                 if (palm != null) {
                     if (modelPalmAtLeapWrist) {
                         palm.position = GetWristPosition();
@@ -266,7 +273,7 @@ namespace Leap.Unity {
                         fingers[i].UpdateFinger();
                     }
                 }
-            }
+            /*}
             else
             {
 
@@ -309,7 +316,7 @@ namespace Leap.Unity {
                         
             
                 }
-            }
+            }*/
         }
 
         /**Sets up the rigged hand by finding base of each finger by name */
@@ -430,19 +437,6 @@ namespace Leap.Unity {
             Vector3 b = palm.transform.InverseTransformPoint(finger1.position);
             Vector3 c = palm.transform.InverseTransformPoint(finger2.position);
 
-            Scene m_Scene;
-            string sceneName;
-            m_Scene = SceneManager.GetActiveScene();
-            sceneName = m_Scene.name;
-
-            if (sceneName.Equals("Learn"))
-            {
-                Debug.Log("2");
-                a = palm.transform.InverseTransformPoint(jointPositions[PALM_INDEX]);
-                b = palm.transform.InverseTransformPoint(jointPositions[PINKY_DISTAL_INDEX]);
-                c = palm.transform.InverseTransformPoint(jointPositions[MIDDLE_DISTAL_INDEX]);
-            }
-
             Vector3 side1 = b - a;
             Vector3 side2 = c - a;
             Vector3 perpendicular;
@@ -459,15 +453,6 @@ namespace Leap.Unity {
         /**Find finger direction by finding distance vector from palm to middle finger */
         private Vector3 calculateModelFingerPointing() {
             Vector3 distance = palm.transform.InverseTransformPoint(fingers[2].transform.GetChild(0).transform.position) - palm.transform.InverseTransformPoint(palm.position);
-            Scene m_Scene;
-            string sceneName;
-            m_Scene = SceneManager.GetActiveScene();
-            sceneName = m_Scene.name;
-            if (sceneName.Equals("Learn"))
-            {
-                Debug.Log("3");
-                distance = palm.transform.InverseTransformPoint(jointPositions[PINKY_INTER_INDEX]) - transform.InverseTransformPoint(jointPositions[PALM_INDEX]);
-            }
             Vector3 calculatedFingerPointing = CalculateZeroedVector(distance);
             return calculatedFingerPointing * -1f;
         }
@@ -507,12 +492,6 @@ namespace Leap.Unity {
                 jointTrans.localRotation = localRotations[i];
                 jointTrans.localPosition = localPositions[i];
             }
-            Debug.Log(stop);
-        }
-
-        public void stopitall()
-        {
-            stop = true;
         }
 
         private void updateDeformPositionsInFingers() {
