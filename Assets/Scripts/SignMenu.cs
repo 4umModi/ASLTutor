@@ -33,12 +33,48 @@ public class SignMenu : MonoBehaviour
     //array of sign struct
     [SerializeField] Sign[] allSigns = new Sign[1000];
 
+
+    //method to alphabetize signs for menu
+    void Alphabetize()
+    {
+        //array that becomes alphabetized
+        List<string> alphabetizedArray = new List<string>();
+
+        //all letter words
+        List<string> lettersArray = new List<string>();
+
+        //all words
+        List<string> wordsArray = new List<string>();
+
+        for (int i = 0; i < stringSignArray.Count; i++)
+        {
+            string word = getName(stringSignArray[i]);
+            if (word.Length == 1) lettersArray.Add(stringSignArray[i]);
+            else wordsArray.Add(stringSignArray[i]);
+        }
+
+        //sorts alphaetically
+        lettersArray.Sort();
+        wordsArray.Sort();
+
+        //puts single letters first and then words in alphabetical order
+        alphabetizedArray.AddRange(lettersArray);
+        alphabetizedArray.AddRange(wordsArray);
+
+        //set stringSignArray equal to alphabetized array
+        stringSignArray = alphabetizedArray;
+
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
 
         //calls method to read Textfile
         stringSignArray = readTextFile("Assets\\Scripts\\signs.txt");
+
+        Alphabetize();
 
         //gets length of array
         signNum = stringSignArray.Count;

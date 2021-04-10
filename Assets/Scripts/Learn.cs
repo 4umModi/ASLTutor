@@ -10,23 +10,128 @@ using System.Text;
 
 public class Learn : MonoBehaviour
 {
+    //variable of other script, current sign
     CurrentSign currentSign;
+
+    //dynamic number (to get value)
     public Text dynNumber;
+
+    public Button nextFrameButton;
+    public Button prevFrameButton;
+    public Button normal;
+    public Canvas imageView;
+    public UnityEngine.UI.Image frontBig;
+    public UnityEngine.UI.Image backBig;
+    public UnityEngine.UI.Image side1Big;
+    public UnityEngine.UI.Image side2Big;
+    public Text frontTextBig;
+    public Text side1TextBig;
+    public Text side2TextBig;
+    public Text backTextBig;
 
     // Start is called before the first frame update
     void Start()
     {
         currentSign = GameObject.FindGameObjectWithTag("CurrentSign").GetComponent<CurrentSign>();
         dynNumber = GameObject.FindGameObjectWithTag("dyntxt").GetComponent<Text>();
+        nextFrameButton = GameObject.FindGameObjectWithTag("nextframe").GetComponent<Button>();
+        prevFrameButton = GameObject.FindGameObjectWithTag("prevframe").GetComponent<Button>();
+        imageView = GameObject.FindGameObjectWithTag("preview").GetComponent<Canvas>();
+
+        frontBig = GameObject.FindGameObjectWithTag("Front").GetComponent<UnityEngine.UI.Image>();
+        side1Big = GameObject.FindGameObjectWithTag("Side1").GetComponent<UnityEngine.UI.Image>();
+        side2Big = GameObject.FindGameObjectWithTag("Side2").GetComponent<UnityEngine.UI.Image>();
+        backBig = GameObject.FindGameObjectWithTag("Back").GetComponent<UnityEngine.UI.Image>();
+
+        frontTextBig = GameObject.FindGameObjectWithTag("FronttxtBig").GetComponent<Text>();
+        side1TextBig = GameObject.FindGameObjectWithTag("SidetxtBig").GetComponent<Text>();
+        side2TextBig = GameObject.FindGameObjectWithTag("Side2txtBig").GetComponent<Text>();
+        backTextBig = GameObject.FindGameObjectWithTag("BacktxtBig").GetComponent<Text>();
+
+        normal = GameObject.FindGameObjectWithTag("normal").GetComponent<Button>();
+
+        frontBig.enabled = false;
+        side1Big.enabled = false;
+        side2Big.enabled = false;
+        backBig.enabled = false;
+
+        frontTextBig.enabled = false;
+        side1TextBig.enabled = false;
+        side2TextBig.enabled = false;
+        backTextBig.enabled = false;
+
+        normal.interactable = false;
 
         dynNumber.text = "0";
-        if (currentSign.getIsDynamic()) dynNumber.text = "1";
+        if (currentSign.getIsDynamic()) 
+        { 
+            dynNumber.text = "1"; 
+        }
+        else
+        {
+            nextFrameButton.interactable = false;
+            prevFrameButton.interactable = false;
+        }
         createUI(currentSign.getName(), int.Parse(dynNumber.text));
+    }
+
+    public void frontView(UnityEngine.UI.Image frontIMG)
+    {
+        imageView.enabled = false;
+        frontBig.enabled = true;
+        frontTextBig.enabled = true;
+        frontBig.sprite = frontIMG.sprite;
+        normal.interactable = true;
+    }
+
+    public void backView(UnityEngine.UI.Image backIMG)
+    {
+        imageView.enabled = false;
+        backBig.enabled = true;
+        backTextBig.enabled = true;
+        backBig.sprite = backIMG.sprite;
+        normal.interactable = true;
+    }
+
+    public void side1View(UnityEngine.UI.Image side1IMG)
+    {
+        imageView.enabled = false;
+        side1Big.enabled = true;
+        side1TextBig.enabled = true;
+        side1Big.sprite = side1IMG.sprite;
+        normal.interactable = true;
+    }
+
+    public void side2View(UnityEngine.UI.Image side2IMG)
+    {
+        imageView.enabled = false;
+        side2Big.enabled = true;
+        side2TextBig.enabled = true;
+        side2Big.sprite = side2IMG.sprite;
+        normal.interactable = true;
+    }
+
+    public void normalView()
+    {
+        Debug.Log("HERE!");
+        imageView.enabled = true;
+        frontBig.enabled = false;
+        side1Big.enabled = false;
+        side2Big.enabled = false;
+        backBig.enabled = false;
+
+        frontTextBig.enabled = false;
+        side1TextBig.enabled = false;
+        side2TextBig.enabled = false;
+        backTextBig.enabled = false;
+        normal.interactable = false;
     }
 
     // Update is called once per frame
     void createUI(string name, int dynamic)
     {
+        //if not dynamic sign, there is only one image
+
         string path = Application.dataPath + "/Resources/DataImages/" + name + "/" + name;
         string frontPath = path + "_front.png";
         string backPath = path + "_back.png";

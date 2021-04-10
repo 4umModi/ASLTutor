@@ -31,6 +31,16 @@ TagManager:
   - side2prev
   - nameholder
   - dynholder
+  - prevframe
+  - Fronttxt
+  - Backtxt
+  - Side1txt
+  - Side2txt
+  - FronttxtBig
+  - BacktxtBig
+  - SidetxtBig
+  - Side2txtBig
+  - normal
   layers:
   - Default
   - TransparentFX

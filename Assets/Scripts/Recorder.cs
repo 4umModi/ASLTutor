@@ -165,8 +165,8 @@ public class Recorder : MonoBehaviour
         //changes size to 300
         countDown.GetComponent<Text>().fontSize = 45;
 
-        countDown.GetComponent<Text>().text = "Finished recording!\n If you would like to add images for learning check add images before pressing Add Sign";
-        yield return new WaitForSeconds(2f);
+        countDown.GetComponent<Text>().text = "Finished recording!\nIf you would like to add images for learning\ncheck add images before pressing Add Sign";
+        yield return new WaitForSeconds(4f);
 
         //toggles off text
         countDown.gameObject.SetActive(false);
@@ -288,7 +288,7 @@ public class Recorder : MonoBehaviour
         //toggles off text
         userText.enabled = false;
         done.interactable = true;
-        nextFrame.interactable = true;
+        if (!dynamicValue.text.Equals("0")) nextFrame.interactable = true;
         signbox2.enabled = false;
         imagePreview.enabled = false;
         postRender();
@@ -304,6 +304,7 @@ public class Recorder : MonoBehaviour
     void Start()
     {
 
+        //For UI Control, turning off and on various game objects
         signbox = GameObject.FindGameObjectWithTag("signbox").GetComponent<UnityEngine.UI.Image>();
         signbox.enabled = false;
 
@@ -340,6 +341,8 @@ public class Recorder : MonoBehaviour
         dynamicText.enabled = false;
         userText.enabled = false;
 
+
+        //sets main camera (makes the canvas attachted to this camera active)
         mainCanvas.worldCamera = mainCamera;
 
         //finds countdown game object
@@ -800,6 +803,7 @@ public class Recorder : MonoBehaviour
         return featureIDList;
     }
 
+    //prompts user to take images
     public void askUserForImages(bool isDynamic)
     {
 
@@ -807,6 +811,7 @@ public class Recorder : MonoBehaviour
 
     }
 
+    //prompts user to take images (dynamic)
     public void askUserForImagesDynamic()
     {
         StartCoroutine(userPromptDynamic("Please record the sign again in \nthe black box to take an image of it"));
@@ -833,36 +838,46 @@ public class Recorder : MonoBehaviour
             File.Delete(path + "_side2-" + dynamicValue.text + ".png");
         }
 
+        nextFrame.interactable = false;
         askUserForImagesDynamic();
-        nextFrame.enabled = false;
+        /*if (dynamicValue.text.Equals("0")) nextFrame.interactable = false;
+        else nextFrame.interactable = true;*/
 
     }
 
+    //this method takes picture of the hand to show when learning the sign
     public void postRender()
     {
+
+        //disables main camera to go to other canvas
         mainCanvas.enabled = false;
         mainCamera.enabled = false;
 
         imageCanvas.enabled = true;
         backCamera.enabled = true;
 
+        //gets string name
         string name = signname.text;
-
         string path = Application.dataPath + "/Resources/DataImages/" + name +"/";
 
+        //dimensions of image
         int width = Screen.width / 2;
         int height = Screen.height / 2;
         int startX = Screen.width / 2;
         int startY = 0;
 
+        //creates file names for 4 views of sign
         string frontPath = path + name + "_front.png";
         string backPath = path + name + "_back.png";
         string side1Path = path + name + "_side1.png";
         string side2Path = path + name + "_side2.png";
 
+        //creates folder for sign
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
 
+        //runs this 4 times, quickly switches camera and takes image of sign (user can not see this because it happens so quickly)
+        //4 cameras are around the hand to get different views
         for (int i = 0; i < 4; i++)
         {
             if (i == 0) cam = frontCamera;
@@ -922,6 +937,7 @@ public class Recorder : MonoBehaviour
             }
         }
 
+        //disables camera and uses main camera on new canvas
         backCamera.enabled = false;
         frontCamera.enabled = false;
         side1Camera.enabled = false;
@@ -930,16 +946,13 @@ public class Recorder : MonoBehaviour
         mainCamera.enabled = true;
         imageCanvas.worldCamera = mainCamera;
         signbox2.enabled = false;
-        if (isDynamic)
-        {
-            nextFrame.interactable = true;
-            dynamicText.enabled = true;
-        }
 
         //Allows user to view images just taken, if user needs to redo it, then clicks redo button
 
+        //turns on image preivew
         imagePreview.enabled = true;
 
+        //allows user to see the images on the canvas
         UnityEngine.UI.Image frontIMG = GameObject.FindGameObjectWithTag("frontprev").GetComponent<UnityEngine.UI.Image>();
         UnityEngine.UI.Image backIMG = GameObject.FindGameObjectWithTag("backprev").GetComponent<UnityEngine.UI.Image>();
         UnityEngine.UI.Image side1IMG = GameObject.FindGameObjectWithTag("side1prev").GetComponent<UnityEngine.UI.Image>();
@@ -969,6 +982,13 @@ public class Recorder : MonoBehaviour
         backIMG.sprite = backSprite;
         side2IMG.sprite = side1Sprite;
         side1IMG.sprite = side2Sprite;
+
+        //turns on UI buttons
+        if (isDynamic)
+        {
+            nextFrame.interactable = true;
+            dynamicText.enabled = true;
+        }
 
     }
 
@@ -1021,7 +1041,7 @@ public class Recorder : MonoBehaviour
         //close file
         writer.Close();
 
-        Debug.Log(line);
+        //Debug.Log(line);
 
         //find value of dynamic toggle
         Toggle images = imagesToggle.GetComponent<Toggle>();
@@ -1038,171 +1058,6 @@ public class Recorder : MonoBehaviour
     {
         StartCoroutine(finishedImagesFeedback());
     }
-
-    //For trying to animate the hand
-    /*
-    //writes to CSV file
-    public void writeToCSV()
-    {
-        
-        List<string>header = new List<string>() {"Palm_PositionX", "Palm_PositionY", "Palm_PositionZ", "Palm_RotationX", "Palm_RotationY", "Palm_RotationZ", "Palm_RotationW",
-            "Wrist_PositionX", "Wrist_PositionY", "Wrist_PositionZ", "Forearm_RotationX", "Forearm_RotationY", "Forearm_RotationZ", "Forearm_RotationW",
-            "IndexProx_PostionX", "IndexProx_PostionY", "IndexProx_PostionZ", "IndexProx_RotationX", "IndexProx_RotationY", "IndexProx_RotationZ", "IndexProx_RotationW",
-            "IndexInter_PostionX", "IndexInter_PostionY", "IndexInter_PostionZ", "IndexInter_RotationX", "IndexInter_RotationY", "IndexInter_RotationZ", "IndexInter_RotationW",
-            "IndexDistal_PostionX", "IndexDistal_PostionY", "IndexDistal_PostionZ", "IndexDistal_RotationX", "IndexDistal_RotationY", "IndexDistal_RotationZ", "IndexDistal_RotationW",
-            "MiddleProx_PostionX", "MiddleProx_PostionY", "MiddleProx_PostionZ", "MiddleProx_RotationX", "MiddleProx_RotationY", "MiddleProx_RotationZ", "MiddleProx_RotationW",
-            "MiddleInter_PostionX", "MiddleInter_PostionY", "MiddleInter_PostionZ", "MiddleInter_RotationX", "MiddleInter_RotationY", "MiddleInter_RotationZ", "MiddleInter_RotationW",
-            "MiddleDistal_PostionX", "MiddleDistal_PostionY", "MiddleDistal_PostionZ", "MiddleDistal_RotationX", "MiddleDistal_RotationY", "MiddleDistal_RotationZ", "MiddleDistal_RotationW",
-            "PinkyProx_PostionX", "PinkyProx_PostionY", "PinkyProx_PostionZ", "PinkyProx_RotationX", "PinkyProx_RotationY", "PinkyProx_RotationZ", "PinkyProx_RotationW",
-            "PinkyInter_PostionX", "PinkyInter_PostionY", "PinkyInter_PostionZ", "PinkyInter_RotationX", "PinkyInter_RotationY", "PinkyInter_RotationZ", "PinkyInter_RotationW",
-            "PinkyDistal_PostionX", "PinkyDistal_PostionY", "PinkyDistal_PostionZ", "PinkyDistal_RotationX", "PinkyDistal_RotationY", "PinkyDistal_RotationZ", "PinkyDistal_RotationW",
-            "RingProx_PostionX", "RingProx_PostionY", "RingProx_PostionZ", "RingProx_RotationX", "RingProx_RotationY", "RingProx_RotationZ", "RingProx_RotationW",
-            "RingInter_PostionX", "RingInter_PostionY", "RingInter_PostionZ", "RingInter_RotationX", "RingInter_RotationY", "RingInter_RotationZ", "RingInter_RotationW",
-            "RingDistal_PostionX", "RingDistal_PostionY", "RingDistal_PostionZ", "RingDistal_RotationX", "RingDistal_RotationY", "RingDistal_RotationZ", "RingDistal_RotationW",
-            "ThumbProx_PostionX", "ThumbProx_PostionY", "ThumbProx_PostionZ", "ThumbProx_RotationX", "ThumbProx_RotationY", "ThumbProx_RotationZ", "ThumbProx_RotationW",
-            "ThumbInter_PostionX", "ThumbInter_PostionY", "ThumbInter_PostionZ", "ThumbInter_RotationX", "ThumbInter_RotationY", "ThumbInter_RotationZ", "ThumbInter_RotationW",
-            "ThumbDistal_PostionX", "ThumbDistal_PostionY", "ThumbDistal_PostionZ", "ThumbDistal_RotationX", "ThumbDistal_RotationY", "ThumbDistal_RotationZ", "ThumbDistal_RotationW",
-            "middletoPalmDistanceX", "middletoPalmDistanceY", "middletoPalmDistanceZ"};
-        
-        string name;
-        iField = GameObject.Find("SignName").GetComponent<InputField>();
-        name = iField.text;
-        string strFilePath = "";
-
-        if (rightAnimationCoords.Count > 0)
-        {
-            strFilePath = "Assets/Scripts/" + name + "_right.csv";
-            File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
-            File.AppendAllText(strFilePath, (getJoints(rightAnimationCoords) + Environment.NewLine));
-        }
-
-        if (leftAnimationCoords.Count > 0)
-        {
-            strFilePath = "Assets/Scripts/" + name + "_left.csv";
-            File.WriteAllText(strFilePath, getHeader(header) + Environment.NewLine);
-            File.AppendAllText(strFilePath, (getJoints(leftAnimationCoords) + Environment.NewLine));
-        }
-
-    }
-
-
-
-
-    /*
-    //method to get rotation in quaternion
-    private Quaternion calculateRotation(LeapTransform trs)
-    {
-        Vector3 up = trs.yBasis.ToVector3();
-        Vector3 forward = trs.zBasis.ToVector3();
-        return Quaternion.LookRotation(forward, up);
-    }
-
-    public void getFrameValues(Hand hand)
-    {
-        List<float> handFrame = new List<float>();
-        List<float> index = new List<float>();
-        List<float> middle = new List<float>();
-        List<float> pinky = new List<float>();
-        List<float> ring = new List<float>();
-        List<float> thumb = new List<float>();
-
-        Arm arm = hand.Arm;
-        Vector palmPos = hand.PalmPosition;
-        Vector wristPos = arm.WristPosition;
-        LeapTransform palmRotation = hand.Basis;
-        Quaternion palmRot = calculateRotation(palmRotation);
-        Quaternion forearmRot = hand.Arm.Rotation.ToQuaternion();
-        Vector middleDistal = new Vector();
-
-        List<Finger> fingers = hand.Fingers;
-
-        foreach (Finger finger in fingers)
-        {
-
-            Bone distalBone = finger.Bone((Bone.BoneType)(TYPE_DISTAL));
-            Bone interBone = finger.Bone((Bone.BoneType)(TYPE_INTERMEDIATE));
-            Bone proxBone = finger.Bone((Bone.BoneType)(TYPE_PROXIMAL));
-
-            Vector distal = distalBone.NextJoint;
-            Vector inter = interBone.NextJoint;
-            Vector prox = proxBone.NextJoint;
-
-            Quaternion distalRot = distalBone.Rotation.ToQuaternion();
-            Quaternion interRot = interBone.Rotation.ToQuaternion();
-            Quaternion proxRot = proxBone.Rotation.ToQuaternion();
-
-            if (finger.Type == Finger.FingerType.TYPE_INDEX)
-            {
-                index.Add(prox[0], prox[1], prox[2]);
-                index.Add(inter[0], inter[1], inter[2]);
-                index.Add(distal[0], distal[1], distal[2]);
-                index.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
-                index.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
-                index.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
-
-            }
-
-            if (finger.Type == Finger.FingerType.TYPE_MIDDLE)
-            {
-                middleDistal = distal;
-                middle.Add(prox[0], prox[1], prox[2]);
-                middle.Add(inter[0], inter[1], inter[2]);
-                middle.Add(distal[0], distal[1], distal[2]);
-                middle.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
-                middle.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
-                middle.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
-            }
-
-            if (finger.Type == Finger.FingerType.TYPE_PINKY)
-            {
-                pinky.Add(prox[0], prox[1], prox[2]);
-                pinky.Add(inter[0], inter[1], inter[2]);
-                pinky.Add(distal[0], distal[1], distal[2]);
-                pinky.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
-                pinky.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
-                pinky.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]); 
-            }
-
-            if (finger.Type == Finger.FingerType.TYPE_RING)
-            {
-                ring.Add(prox[0], prox[1], prox[2]);
-                ring.Add(inter[0], inter[1], inter[2]);
-                ring.Add(distal[0], distal[1], distal[2]);
-                ring.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
-                ring.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
-                ring.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
-            }
-
-            if (finger.Type == Finger.FingerType.TYPE_THUMB)
-            {
-                thumb.Add(prox[0], prox[1], prox[2]);
-                thumb.Add(inter[0], inter[1], inter[2]);
-                thumb.Add(distal[0], distal[1], distal[2]);
-                thumb.Add(proxRot[0], proxRot[1], proxRot[2], proxRot[3]);
-                thumb.Add(interRot[0], interRot[1], interRot[2], interRot[3]);
-                thumb.Add(distalRot[0], distalRot[1], distalRot[2], distalRot[3]);
-            }
-        }
-
-        Vector distance = palmPos - middleDistal;
-
-        handFrame.Add(palmPos[0], palmPos[1], palmPos[2]);
-        handFrame.Add(palmRot[0], palmRot[1], palmRot[2], palmRot[3]);
-        handFrame.Add(wristPos[0], wristPos[1], wristPos[2]);
-        handFrame.Add(forearmRot[0], forearmRot[1], forearmRot[2], forearmRot[3]);
-        handFrame.AddRange(index);
-        handFrame.AddRange(middle);
-        handFrame.AddRange(pinky);
-        handFrame.AddRange(ring);
-        handFrame.AddRange(thumb);
-        handFrame.Add(distance[0], distance[1], distance[2]);
-        
-
-        if (leftHandFactor(hand) == 1) leftAnimationCoords.AddRange(handFrame);
-        else rightAnimationCoords.AddRange(handFrame);
-
-        Debug.Log(getJoints(handFrame));
-    }*/
 
     // Update is called once per frame
     public void Update()

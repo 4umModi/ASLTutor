@@ -33,7 +33,7 @@ public class Feedback : MonoBehaviour
         countDown.GetComponent<Text>().text = feedback;
 
         //wait 5 seconds
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(4f);
 
         //toggles off text
         countDown.gameObject.SetActive(false);
@@ -53,7 +53,7 @@ public class Feedback : MonoBehaviour
     public void printFeatureID(List<int> featureIDs)
     {
         string featureIDString = string.Join(",", featureIDs);
-        Debug.Log(featureIDString);
+        //Debug.Log(featureIDString);
     }
 
     //gets the feature IDs and other information from classifier script
@@ -193,22 +193,28 @@ public class Feedback : MonoBehaviour
         {
             for (int i = 0; i < missing.Count; i++)
             {
-                allFeedback.Add(feedback[(missing[i])]);
+                allFeedback.Add(feedback[(missing[i])].Trim());
                 count = count + 1;
             }
         }
+
+        bool offFeedbackButton = false;
 
         //gets the feedback for extra features present
         if (extra.Count > 0)
         {
             for (int i = 0; i < extra.Count; i++)
             {
-                if (i < 30) allFeedback.Add(feedbackExtra[(extra[i])]);
-                else allFeedback.Add(feedback[(extra[i])]);
+                if (i < 30) 
+                {
+                    if (extra[i] == 0) { allFeedback.Add(feedbackExtra[(extra[i])].Trim()); offFeedbackButton = true; }
+                    }
+                else allFeedback.Add(feedback[(extra[i])].Trim());
                 count = count + 1;
             }
         }
-        StartCoroutine(userFeedback("Get your feedback"));
+        StartCoroutine(userFeedback("You have done the Sign incorrectly. \n Click Get Feedback or Learn to improve!"));
+        feedbackButton.interactable = offFeedbackButton;
     }
 
     public void getFeedback()
