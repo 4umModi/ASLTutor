@@ -624,7 +624,7 @@ public class Classifier : MonoBehaviour
         Vector palmDirection = hands[0].Direction;
         //finds y value of palm direction(checks if fingers face up or down)
         float palmDirectionZ = palmDirection[2];
-        Debug.Log(palmDirectionZ);
+        //Debug.Log(palmDirectionZ);
 
         //static signs will be immediately categorized by frame
         //if dynamic will find static features for first frame
@@ -661,7 +661,7 @@ public class Classifier : MonoBehaviour
                 //gets dynamic features
                 dynamicFeatureIDs = checkDynamicFeatureID(rightHandFrames, leftHandFrames, handFrameCount / framesSkip);
 
-                Debug.Log("got dynamic features");
+                //.Log("got dynamic features");
 
                 //calls feedback script to give feedback
                 featureIDs.getFeatureIDs(staticFeatureIDs, dynamicFeatureIDs, currentSign.getName(), currentSign.getIsDynamic(), currentSign.getFeatures());

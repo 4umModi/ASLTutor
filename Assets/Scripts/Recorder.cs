@@ -83,6 +83,7 @@ public class Recorder : MonoBehaviour
 
     //object of other script
     InputField iField;
+    InputField description;
 
     //THRESHOLD VALUES
 
@@ -1012,6 +1013,10 @@ public class Recorder : MonoBehaviour
         name = iField.text;
         signname.text = name;
 
+        string desc;
+        description = GameObject.Find("Description").GetComponent<InputField>();
+        desc = description.text;
+
         //if there is no string name, return
         if (name.Length == 0) return;
 
@@ -1033,12 +1038,19 @@ public class Recorder : MonoBehaviour
         //if line is full of only dynamic feauters and spaces, return
         if (line.Length < 4) return;
 
-        //write to file
-        string filePath = "Assets/Scripts/signs.txt";
+        //write sign to file
+        string filePath = "Assets/Resources/signs.txt";
         StreamWriter writer = new StreamWriter(filePath, true);
         writer.WriteLine(line);
 
         //close file
+        writer.Close();
+
+        //write sign description to file
+        string descriptionLine = name + " " + desc;
+        filePath = "Assets/Resources/sign_desc.txt";
+        writer = new StreamWriter(filePath, true);
+        writer.WriteLine(descriptionLine);
         writer.Close();
 
         //Debug.Log(line);

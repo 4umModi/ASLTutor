@@ -20,7 +20,7 @@ public class CurrentSign : MonoBehaviour
 
     Sign currentSign = new Sign();
 
-    //this makes it so that in a new scene, the object that holds this script will not be reloaded or destroyed. The same copy of the script will be used regardless of scene changes
+    //this makes it so that in s new scene, the object that holds this script will not be reloaded or destroyed. The same copy of the script will be used regardless of scene changes
     void Awake()
     {
       DontDestroyOnLoad(this.gameObject);
@@ -77,7 +77,7 @@ public class CurrentSign : MonoBehaviour
 
         //write to text files for scripts that can not access script
         //quick fix for dependency issues
-        string filePath = "Assets/Scripts/currentsign.txt";
+        string filePath = "Assets/Resources/currentsign.txt";
         StreamWriter writer = new StreamWriter(filePath, false);
         string dynamicString = "0";
         if (currentSign.isDynamic) dynamicString = "1";

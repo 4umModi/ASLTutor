@@ -41,6 +41,7 @@ TagManager:
   - SidetxtBig
   - Side2txtBig
   - normal
+  - desc
   layers:
   - Default
   - TransparentFX

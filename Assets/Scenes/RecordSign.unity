@@ -2222,8 +2222,8 @@ GameObject:
   - component: {fileID: 678080859}
   - component: {fileID: 678080858}
   m_Layer: 5
-  m_Name: InputField
-  m_TagString: Untagged
+  m_Name: Description
+  m_TagString: desc
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

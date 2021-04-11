@@ -85,6 +85,7 @@ public class Feedback : MonoBehaviour
         {
             //gives on screen feedback of doing sign correctly
             StartCoroutine(userFeedback("You have done the sign correctly!"));
+            feedbackButton.interactable = false;
             return;
         }
 
@@ -97,7 +98,7 @@ public class Feedback : MonoBehaviour
 
         //if the sign is dynamic all static features are only for the first frame
         if (isDynamic) endOfFeedback = " when you begin the sign";
-                
+
         //creates an array of feedback for missing features
         string[] feedback = new string[50];
 
@@ -126,7 +127,7 @@ public class Feedback : MonoBehaviour
         feedback[18] = ("Left Hand should Bend Index Finger" + endOfFeedback);
         feedback[19] = (precedingFeedback + "Hand should Extend Thumb" + endOfFeedback);
         feedback[20] = ("Left Hand should Extend Thumb" + endOfFeedback);
-        feedback[21] = (precedingFeedback  + "Hand should Bend Thumb" + endOfFeedback);
+        feedback[21] = (precedingFeedback + "Hand should Bend Thumb" + endOfFeedback);
         feedback[22] = ("Left Hand should Bend Thumb" + endOfFeedback);
         feedback[23] = (precedingFeedback + " Hand should have fingers facing up" + endOfFeedback);
         feedback[24] = ("Left Hand should have fingers facing up" + endOfFeedback);
@@ -205,14 +206,16 @@ public class Feedback : MonoBehaviour
         {
             for (int i = 0; i < extra.Count; i++)
             {
-                if (i < 30) 
+                if (i < 30)
                 {
                     if (extra[i] == 0) { allFeedback.Add(feedbackExtra[(extra[i])].Trim()); offFeedbackButton = true; }
-                    }
+                }
                 else allFeedback.Add(feedback[(extra[i])].Trim());
                 count = count + 1;
             }
         }
+
+        if (allFeedback.Count == 0) {StartCoroutine(userFeedback("You have done the sign correctly!")); feedbackButton.interactable = false; return; }
         StartCoroutine(userFeedback("You have done the Sign incorrectly. \n Click Get Feedback or Learn to improve!"));
         feedbackButton.interactable = offFeedbackButton;
     }

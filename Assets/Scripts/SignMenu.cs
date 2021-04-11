@@ -72,7 +72,7 @@ public class SignMenu : MonoBehaviour
     {
 
         //calls method to read Textfile
-        stringSignArray = readTextFile("Assets\\Scripts\\signs.txt");
+        stringSignArray = readTextFile("Assets\\Resources\\signs.txt");
 
         Alphabetize();
 
