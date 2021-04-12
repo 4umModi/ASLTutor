@@ -185,8 +185,8 @@ public class Classifier : MonoBehaviour
     {
         title = GameObject.Find("StartText");
         title.gameObject.SetActive(true);
-        if (isDynamic) title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name + " (dynamic sign)");
-        else title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name + " (static sign)");
+        if (isDynamic) title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name);
+        else title.GetComponent<Text>().text = ("ASL Tutor" + "\n" + name);
     }
 
 
