@@ -22,6 +22,7 @@ public class Feedback : MonoBehaviour
     IEnumerator userFeedback(string feedback)
     {
   
+
         recButton.interactable = false;
         //toggles on countdown text
         countDown.gameObject.SetActive(true);
@@ -38,7 +39,7 @@ public class Feedback : MonoBehaviour
         //toggles off text
         countDown.gameObject.SetActive(false);
         recButton.interactable = true;
-        feedbackButton.interactable = true;
+        if (!feedback.Equals("Good Job!\nYou have done the sign correctly!")) feedbackButton.interactable = true;
     }
 
     public void Start()
@@ -84,8 +85,8 @@ public class Feedback : MonoBehaviour
         if (missing.Count == 0 && extra.Count == 0)
         {
             //gives on screen feedback of doing sign correctly
-            StartCoroutine(userFeedback("You have done the sign correctly!"));
-            feedbackButton.interactable = false;
+            StartCoroutine(userFeedback("Good Job!\nYou have done the sign correctly!"));
+            //feedbackButton.interactable = false;
             return;
         }
 
@@ -215,8 +216,8 @@ public class Feedback : MonoBehaviour
             }
         }
 
-        if (allFeedback.Count == 0) {StartCoroutine(userFeedback("You have done the sign correctly!")); feedbackButton.interactable = false; return; }
-        StartCoroutine(userFeedback("You have done the Sign incorrectly. \n Click Get Feedback or Learn to improve!"));
+        if (allFeedback.Count == 0) {StartCoroutine(userFeedback("Good Job!\nYou have done the sign correctly!")); offFeedbackButton = false;}
+        else StartCoroutine(userFeedback("You have done the Sign incorrectly. \n Click Get Feedback or Learn to improve!"));
         feedbackButton.interactable = offFeedbackButton;
     }
 
