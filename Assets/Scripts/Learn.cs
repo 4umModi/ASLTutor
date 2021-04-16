@@ -152,7 +152,7 @@ public class Learn : MonoBehaviour
         //if not dynamic sign, there is only one image
 
         //path of all images
-        string path = Application.dataPath + "/Resources/DataImages/" + name + "/" + name;
+        string path = "Assets\\Resources\\DataImages\\" + name + "\\" + name;
         string frontPath = path + "_front.png";
         string backPath = path + "_back.png";
         string side1Path = path + "_side1.png";
@@ -213,7 +213,7 @@ public class Learn : MonoBehaviour
         int dyn = int.Parse(dynNumber.text);
 
         string name = currentSign.getName();
-        string frontPath = Application.dataPath + "/Resources/DataImages/" + name + "/" + name + "_front-" + (dyn+1).ToString() + ".png";
+        string frontPath = "Assets\\Resources\\DataImages\\" + name + "\\" + name + "_front-" + (dyn+1).ToString() + ".png";
         Debug.Log(frontPath);
         if (!File.Exists(frontPath)) return;
 
@@ -228,7 +228,7 @@ public class Learn : MonoBehaviour
         int dyn = int.Parse(dynNumber.text);
 
         string name = currentSign.getName();
-        string frontPath = Application.dataPath + "/Resources/DataImages/" + name + "/" + name + "_front-" + (dyn-1).ToString() + ".png";
+        string frontPath = "Assets\\Resources\\DataImages\\" + name + "\\" + name + "_front-" + (dyn-1).ToString() + ".png";
         Debug.Log(frontPath);
 
         if (!File.Exists(frontPath)) return;
@@ -242,7 +242,7 @@ public class Learn : MonoBehaviour
     string getDescription(string name)
     {
         List<string> array = new List<string>();
-        StreamReader file = new StreamReader("Assets/Resources/sign_desc.txt");
+        StreamReader file = new StreamReader("Assets\\Resources\\sign_desc.txt");
 
         while (!file.EndOfStream) array.Add(file.ReadLine());
 

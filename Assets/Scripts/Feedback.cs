@@ -209,16 +209,15 @@ public class Feedback : MonoBehaviour
             {
                 if (i < 30)
                 {
-                    if (extra[i] == 0) { allFeedback.Add(feedbackExtra[(extra[i])].Trim()); offFeedbackButton = true; }
+                    if (extra[i] == 0) { allFeedback.Add(feedbackExtra[(extra[i])].Trim());}
                 }
                 else allFeedback.Add(feedback[(extra[i])].Trim());
                 count = count + 1;
             }
         }
 
-        if (allFeedback.Count == 0) {StartCoroutine(userFeedback("Good Job!\nYou have done the sign correctly!")); offFeedbackButton = false;}
+        if (allFeedback.Count == 0) { StartCoroutine(userFeedback("Good Job!\nYou have done the sign correctly!"));}
         else StartCoroutine(userFeedback("You have done the Sign incorrectly. \n Click Get Feedback or Learn to improve!"));
-        feedbackButton.interactable = offFeedbackButton;
     }
 
     public void getFeedback()
