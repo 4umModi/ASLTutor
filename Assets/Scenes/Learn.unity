@@ -234,8 +234,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 11, y: -62}
-  m_SizeDelta: {x: 520.8452, y: 335.26038}
+  m_AnchoredPosition: {x: 27, y: -75.6}
+  m_SizeDelta: {x: 765.60925, y: 451.96582}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &48421853
 MonoBehaviour:
@@ -651,7 +651,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Back of Hand View
+  m_Text: User View
 --- !u!222 &185144603
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -991,7 +991,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Back of Hand View
+  m_Text: User View
 --- !u!222 &480601998
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1304,7 +1304,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Palm View
+  m_Text: Sensor View
 --- !u!222 &639661842
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1580,8 +1580,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 11, y: -62}
-  m_SizeDelta: {x: 520.8452, y: 335.26038}
+  m_AnchoredPosition: {x: 27, y: -85}
+  m_SizeDelta: {x: 765.60913, y: 470.81616}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &951039396
 MonoBehaviour:
@@ -1829,8 +1829,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 11, y: -62}
-  m_SizeDelta: {x: 520.8452, y: 335.26038}
+  m_AnchoredPosition: {x: 27, y: -85.013}
+  m_SizeDelta: {x: 765.60925, y: 470.79065}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1089744412
 MonoBehaviour:
@@ -2773,8 +2773,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 11, y: -62}
-  m_SizeDelta: {x: 520.8452, y: 335.26038}
+  m_AnchoredPosition: {x: 27, y: -85.013}
+  m_SizeDelta: {x: 765.60913, y: 470.79034}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1596607025
 MonoBehaviour:
@@ -2882,7 +2882,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Palm View
+  m_Text: Sensor View
 --- !u!222 &1710380620
 CanvasRenderer:
   m_ObjectHideFlags: 0

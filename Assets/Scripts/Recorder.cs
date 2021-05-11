@@ -1,4 +1,9 @@
-﻿using System;
+﻿//Recorder.cs
+//Written by Forum Modi for CSC498 with Dr.Salgian at The College of New Jersey 5/2020
+//
+
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -823,7 +828,7 @@ public class Recorder : MonoBehaviour
     public void redoImage()
     {
         string name = signname.text;
-        string path = Application.dataPath + "/Resources/DataImages/" + name + "/" + name;
+        string path = "Assets/Resources/DataImages/" + name + "/" + name;
         if (dynamicValue.text.Equals("0") && File.Exists(path + "_front.png"))
         {
             File.Delete(path + "_front.png");
@@ -859,7 +864,7 @@ public class Recorder : MonoBehaviour
 
         //gets string name
         string name = signname.text;
-        string path = Application.dataPath + "/Resources/DataImages/" + name +"/";
+        string path = "Assets/Resources/DataImages/" + name +"/";
 
         //dimensions of image
         int width = Screen.width / 2;

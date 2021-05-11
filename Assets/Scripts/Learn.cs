@@ -1,4 +1,9 @@
-﻿using System;
+﻿//Learn.cs
+//Written by Forum Modi for CSC498 with Dr.Salgian at The College of New Jersey 5/2020
+//
+
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

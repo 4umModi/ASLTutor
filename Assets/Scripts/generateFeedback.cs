@@ -1,4 +1,8 @@
-﻿using System.Collections;
+﻿//generateFeedback.cs
+//Written by Forum Modi for CSC498 with Dr.Salgian at The College of New Jersey 5/2020
+//
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,6 +26,7 @@ public class generateFeedback : MonoBehaviour
     //array of sign struct
     [SerializeField] Feedback[] allFeedback;
 
+    //will present the given feedback if on the scene to present fedebacl
     public void Start()
     {
         Scene m_Scene;
@@ -49,6 +54,7 @@ public class generateFeedback : MonoBehaviour
         }
     }
 
+    //this method will be called when users want to get their feedback
     public void showFeedback(List<string> feedback)
     {
         feedbackList = feedback;
